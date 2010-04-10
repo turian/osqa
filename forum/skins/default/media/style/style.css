@@ -480,15 +480,15 @@ blockquote {
     border-top: 1px dotted #CCCCCE;
     float: left;
     overflow: hidden;
-    padding: 3px 5px 5px 0;
+    padding: 3px 0px 5px 0;
     position: relative;
-    width: 730px;
+    width: 740px;
 }
 
 .short-summary h2 a {
     color: #2A5594;
     font-family: "Trebuchet MS", "segoe ui", arial, sans-serif;
-    font-size: 16px;
+    font-size: 17px;
 }
 
 .short-summary .userinfo {
@@ -503,14 +503,14 @@ blockquote {
 
 .short-summary .counts {
     float: left;
-    margin-right: 8px;
+    margin-right: 0px;
     margin-top: 4px;
-    padding-right: 6px;
+    padding-right: 2px;
 }
 
 .short-summary .counts .item-count {
     font-size: 17px;
-    font-weight: 800;
+    font-weight: bold;
 }
 
 .short-summary .votes, .short-summary .status, .short-summary .views {
@@ -518,10 +518,10 @@ blockquote {
     border-bottom: 1px solid #CCCCCC;
     border-right: 1px solid #CCCCCC;
     float: left;
-    font-size: 12px;
-    height: 48px;
-    margin: 0 0 0 7px;
-    padding: 4px 2px 0;
+    font-size: 11px;
+    height: 42px;
+    margin: 0 6px 0 0px;
+    padding: 8px 2px 0;
     text-align: center;
     width: 46px;
 }
