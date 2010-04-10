@@ -41,7 +41,7 @@ def list(paginate, default_page_size):
                 'has_next': page_obj.has_next(),
                 'previous': page_obj.previous_page_number(),
                 'next': page_obj.next_page_number(),
-                'base_url' : "%s%ssort=%s" % (base_path, ('?' in base_path) and '&' or '?', sort),
+                'base_url' : "%s%ssort=%s&" % (base_path, ('?' in base_path) and '&' or '?', sort),
                 'pagesize' : pagesize
             }
 
