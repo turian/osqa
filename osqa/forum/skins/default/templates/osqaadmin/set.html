@@ -1,0 +1,21 @@
+{% extends "osqaadmin/base.html" %}
+
+{% load i18n %}
+{% load extra_tags %}
+
+{% block subtitle %}{{ form.set.title }}{% endblock %}
+{% block description %}{{ form.set.description }}{% endblock %}
+
+{% block admincontent %}
+    <form action="" method="POST" enctype="multipart/form-data">
+        <table id="admin_form">
+            {{ form.as_table }}
+            <tr>
+                <th></th>
+                <td>
+                    <input id="submit" name="submit" type="submit" value="Save" />
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

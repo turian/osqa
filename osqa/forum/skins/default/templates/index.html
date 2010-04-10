@@ -1,0 +1,16 @@
+{% extends "questions.html" %}
+<!-- index.html -->
+{% load general_sidebar_tags %}
+{% load question_list_tags %}
+{% load cache %}
+
+{% block sidebar %}
+{% cache 60 index_sidebar settings.APP_URL %}
+    {% question_list_count %}
+    {% tag_selector %}
+    {% recent_tags %}
+    {% recent_awards %}
+{% endcache %}
+{% endblock %}
+<!-- index.html -->
+

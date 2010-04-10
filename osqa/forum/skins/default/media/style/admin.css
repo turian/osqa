@@ -1,0 +1,33 @@
+#admin_form {
+    border-spacing: 10px;
+}
+
+#admin_form input[type="text"], #admin_form input[type="submit"], #admin_form textarea {
+    line-height: 22px;
+    font-size: 140%;
+    font-family: sans-serif;
+    border: 1px solid #999;
+    color: black;
+}
+
+#admin_form input[type="text"], #admin_form input[type="submit"] {
+    height: 28px;
+}
+
+#admin_form input[type="text"], #admin_form textarea {
+    width: 550px;    
+}
+
+#admin_form th {
+    text-align: left;
+    vertical-align: top;
+}
+
+#admin_form td {
+    color: gray;
+}
+
+#admin_page_description {
+    color: gray;
+    padding-bottom: 20px;
+}

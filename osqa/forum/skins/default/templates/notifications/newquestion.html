@@ -1,0 +1,27 @@
+{% extends "email_base.html" %}
+{% load i18n %}
+{% load extra_tags %}
+
+{% block content %}
+    <p>{% trans "Hello" %} {% user_var username %},</p>
+
+    <p>
+        {% blocktrans with question.author.username as author_name and settings.APP_SHORT_NAME as app_title and settings.APP_URL as app_url and question.get_absolute_url as question_url and question.title as question_title and question.tagnames as question_tags %}
+        {{ author_name }} has just posted a new question on {{ app_title }}, with title
+        <a href="{{ app_url }}{{ question_url }}">{{ question_title }}</a> and tagged <em>{{ question_tags }}</em>:
+        {% endblocktrans %}
+    </p>
+
+    <blockquote>
+        {{ question.html|safe }}
+    </blockquote>
+
+    <p>
+    {% blocktrans %}
+        Don't forget to come over and cast your vote.
+    {% endblocktrans %}
+    </p>
+
+    <p>{% blocktrans %}Sincerely,<br />
+    Forum Administrator{% endblocktrans %}</p>
+{% endblock %}

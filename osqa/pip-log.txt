@@ -1,0 +1,11 @@
+Exception:
+Traceback (most recent call last):
+  File "d:\env\lib\site-packages\pip-0.6.3-py2.6.egg\pip\basecommand.py", line 115, in main
+    self.run(options, args)
+  File "d:\env\lib\site-packages\pip-0.6.3-py2.6.egg\pip\commands\install.py", line 153, in run
+    for req in parse_requirements(filename, finder=finder, options=options):
+  File "d:\env\lib\site-packages\pip-0.6.3-py2.6.egg\pip\req.py", line 1274, in parse_requirements
+    filename, content = get_file_content(filename, comes_from=comes_from)
+  File "d:\env\lib\site-packages\pip-0.6.3-py2.6.egg\pip\util.py", line 300, in get_file_content
+    f = open(url)
+IOError: [Errno 2] No such file or directory: 'osqa_requirements.txt'

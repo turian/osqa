@@ -1,0 +1,32 @@
+<!-- user_tabs.html -->
+{% load extra_filters %}
+{% load i18n %}
+<div class="tabBar">
+    <div class="tabsA">
+        <a id="stats" {% ifequal tab_name "stats" %}class="on"{% endifequal %} 
+			title="{% trans "User profile" %}" href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}/?sort=stats">{% trans "overview" %}</a>
+        <a id="recent" {% ifequal tab_name "recent" %}class="on"{% endifequal %} 
+			title="{% trans "recent activity" %}" href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=recent">{% trans "recent activity" %}</a>
+        {% ifequal request.user view_user %}
+        <a id="responses" {% ifequal tab_name "responses" %}class="on"{% endifequal %} 
+			title="{% trans "comments and answers to others questions" %}" 
+			href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=responses">{% trans "responses" %}</a>
+        {% endifequal %}
+        <a id="reputation" {% ifequal tab_name "reputation" %}class="on"{% endifequal %} 
+			title="{% trans "graph of user reputation" %}" 
+			href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=reputation">{% trans "reputation history" %}</a>
+        {% ifequal request.user view_user %}
+        <a id="votes" {% ifequal tab_name "votes" %}class="on"{% endifequal %} 
+			title="{% trans "user vote record" %}" href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=votes">{% trans "casted votes" %}</a>
+        {% endifequal %}
+        <a id="favorites" {% ifequal tab_name "favorites" %}class="on"{% endifequal %} 
+			title="{% trans "questions that user selected as his/her favorite" %}"
+			href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=favorites">{% trans "favorites" %}</a>
+        {% ifequal request.user view_user %}
+        <a id="email_subscriptions" {% ifequal tab_name "subscriptions" %}class="on"{% endifequal %} 
+			title="{% trans "email subscription settings" %}" 
+			href="/users/{{ view_user.id }}/{{ view_user.username|slugify }}?sort=subscriptions">{% trans "subscriptions" %}</a>
+        {% endifequal %}  
+    </div>
+</div>
+<!-- end user_tabs.html -->

@@ -1,0 +1,4 @@
+django>=1.1         # Note: email subscription sender job requires Django 1.1, everything else works with 1.0
+python-openid
+html5lib
+markdown2

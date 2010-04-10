@@ -1,0 +1,58 @@
+<!-- template header.html -->
+{% load extra_tags %}
+{% load i18n %}
+{% load user_tags %}
+	<div id="roof">
+		<div id="navBar">
+			<div id="top">
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_superuser %}
+                        <a href="{% url admin_index %}">{% trans "administration" %}</a>
+                    {% endif %}
+                    {% user_signature_small_full request.user %}
+                    <a href="{% url logout %}">{% trans "logout" %}</a>
+                {% else %}
+                    <a href="{% url auth_signin %}">{% trans "login" %}</a>
+                {% endif %}
+                <a href="{% url about %}">{% trans "about" %}</a>
+                <a href="{% url faq %}">{% trans "faq" %}</a>
+			</div>
+			<table width="100%" border="0" cellspacing="0" cellpadding="0">
+			  <tr>
+				<td width="23%">
+					<div id="logo">
+						<a href="{% url index %}">
+							<img src="{{ settings.APP_LOGO }}" title="{% trans "back to home page" %}" alt="{{settings.APP_TITLE}} logo"/>
+						</a>
+					</div>
+            	</td>
+				<td width="77%" valign="bottom">
+                <div class="nav">
+                    <a id="nav_questions" href="{% url questions %}" >{% trans "questions" %}</a>
+                    <a id="nav_tags" href="{% url tags %}">{% trans "tags" %}</a>
+                    <a id="nav_users" href="{% url users %}">{% trans "users" %}</a>
+                    {% if settings.BOOKS_ON %}
+                    <a id="nav_books" href="{% url books %}">{% trans "books" %}</a>
+                    {% endif %}
+                    <a id="nav_badges" href="{% url badges %}">{% trans "badges" %}</a>
+                    <a id="nav_unanswered" href="{% url unanswered %}">{% trans "unanswered questions" %}</a>
+                    <div class="focus">
+                    <a id="nav_ask" href="{% url search %}" class="special">{% trans "advanced search" %}</a>
+                    </div>
+                </div>
+
+              </td>
+			  </tr>
+			</table>
+		</div>
+		<div id="searchBar">
+            <form action="{% url ask %}" method="post">
+                <div id="ask_teaser">Your question:</div>
+                <div id="ask_input">
+                    <input type="text" class="searchInput" value="{{ keywords }}" name="q" id="keywords" />
+                    <input type="submit" value="{% trans "GO" %}" name="go" id="go_btn" />
+                </div>
+            </form>
+		</div>
+	</div>
+<!-- end template header.html -->

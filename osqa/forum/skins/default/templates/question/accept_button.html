@@ -1,0 +1,7 @@
+{% load i18n %}
+
+{% if can_accept %}
+    <a id="accept-answer-{{ answer.id }}" class="ajax-command accept-answer{% if answer.accepted %} on{% endif %}"
+        title="{% if answer.accepted %}{% blocktrans with answer.accepted_by.username as who %}{{ who }} has selected this answer as the correct answer{% endblocktrans %}{% else %}{% trans "mark this answer as the accepted answer" %}{% endif %}"
+         href="{% url accept_answer id=answer.id %}" rel="nofollow"> </a>
+{% endif %}

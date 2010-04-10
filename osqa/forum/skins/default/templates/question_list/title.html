@@ -1,0 +1,21 @@
+{% load i18n %}
+
+<div class="headQuestions">
+    {% if searchtag %}
+        {% trans "Found by tags" %}
+    {% else %}
+        {% if searchtitle %}
+            {% if settings.USE_SPHINX_SEARCH %}
+                {% trans "Search results" %}
+            {% else %}
+                {% trans "Found by title" %}
+            {% endif %}
+        {% else %}
+            {% if is_unanswered %}
+                {% trans "Unanswered questions" %}
+            {% else %}
+                {% trans "All questions" %}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</div>

@@ -1,0 +1,10 @@
+If you're upgrading your code, please take the following steps in consideration:
+
+If your current code is older than March 27 2010, you'll have to run the syncdb management command again
+and the create_subscriptions command.
+
+If your code is older than March 29 2010, you'll have to run the create_extended_user management command.
+
+Starting at April 6 2010 we started bundling south migrations with OSQA. If your code is older than that, you'll need to run
+"python manage.py migrate forum 0001 --fake", after that, or if your code is newer than this date just run "python manage.py migrate forum"
+each time you upgrade your code.
