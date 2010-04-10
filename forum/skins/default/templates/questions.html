@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+<!-- questions.html -->
+{% load question_list_tags %}
+{% load i18n %}
+{% load extra_tags %}
+
+{% block title %}{% spaceless %}{% trans "Questions" %}{% endspaceless %}{% endblock %}
+{% block forejs %}
+       <script type="text/javascript">
+           var tags = {{ tags_autocomplete|safe }};
+           $().ready(function(){
+               var tab_id = "{{ tab_id }}";
+               $("#"+tab_id).attr('className',"on");
+               var on_tab = {% if is_unanswered %}'#nav_unanswered'{% else %}'#nav_questions'{% endif %};
+               $(on_tab).attr('className','on');
+               Hilite.exact = false;
+               Hilite.elementid = "listA";
+               Hilite.debug_referrer = location.href;
+           });
+       </script>
+{% endblock %}
+{% block content %}
+<div class="tabBar">
+    {% question_list_title %}
+    {% question_sort_tabs sort_context %}
+</div>
+<div id="listA">
+{% for question in questions %}
+    {% question_list_item question %}
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block tail %}
+    <div class="pager">{% cnprog_paginator pagination_context %}</div>
+    <div class="pagesize">{% cnprog_pagesize pagination_context %}</div>
+{% endblock %}
+
+{% block sidebar %}
+    {% question_list_count %}
+    {% tag_selector %}
+    {% question_list_related_tags questions %}
+{% endblock %}
+<!-- end questions.html -->

@@ -1,0 +1,82 @@
+{% load extra_tags %}
+{% load i18n %}
+
+<div class="comments-container" id="comments-container-{{ post_type }}-{{ post.id }}">
+    {% for comment in comments %}
+        <table class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-{{comment.id}}">
+            <tr>
+                <td rowspan="2" class="comment-score" id="comment-{{ comment.id }}-score">
+                    {% if comment.score %}{{ comment.score }}{% endif %}
+                </td>
+                <td class="comment-text" id="comment-{{comment.id}}-text">
+                    {{ comment.comment }}
+                </td>
+            </tr>
+            <tr>
+                <td class="comment-info" id="comment-{{comment.id}}-info">
+                    <a class="comment-user userinfo" href="{{comment.user.get_profile_url}}">{{comment.user}}</a>
+                    <span class="comment-age">({% diff_date comment.added_at %})</span>
+                    {% if comment.can_like %}
+                        <a id="comment-{{ comment.id }}-like" href="{% url like_comment id=comment.id %}"
+                         title="{% trans "I like this comment (click again to cancel)" %}" class="ajax-command comment-like{% if comment.likes %} on{% endif %}"
+                        rel="nofollow"> </a>
+                    {% endif %}
+                    {% if comment.can_edit %}
+                        <a id="comment-{{ comment.id }}-edit" href="#" title="{% trans "Edit comment" %}"
+                            class="comment-edit" rel="nofollow"> </a>
+                    {% endif %}
+                    {% if comment.can_delete %}
+                        <a id="comment-{{ comment.id }}-delete" href="{% url delete_comment id=comment.id %}" title="{% trans "Delete comment" %}"
+                            class="ajax-command comment-delete" rel="nofollow"> </a>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    {% endfor %}
+</div>
+<div id="comment-tools-{{ post_type }}-{{ post.id }}" class="comment-tools">
+    <img src="/m/default/media/images/gray-up-arrow-h18px.png" />
+    {% ifnotequal showing total %}
+        <span class="comments-showing">
+            {% blocktrans %}showing {{ showing }} of {{ total }}{% endblocktrans %}
+        </span>
+        <a href="#" class="show-all-comments-link">{% trans "show all" %}</a>
+    {% endifnotequal %}
+    {% if can_comment %}
+        <a href="#" class="add-comment-link">{% trans "add new comment" %}</a>
+    {% endif %}
+</div>
+{% if can_comment %}
+<div id="comment-{{ post_type }}-{{ post.id }}-form-container" class="comment-form-container">
+    <form id="comment-{{ post_type }}-{{ post.id }}-form" method="post" action="{% url comment post_type=post_type,id=post.id %}">
+        <div class="comment-form-widgets-container">
+            <textarea name="comment"></textarea>
+            <input type="submit" value="{% trans " add comment" %}" />
+        </div>
+        <span id="comment-{{ post_type }}-{{ post.id }}-chars-left" class="comment-chars-left">
+            {% blocktrans %}
+                have <span class="comments-char-left-count">{{ max_length }}</span> characters left
+            {% endblocktrans %}
+        </span>
+        <script type="text/html" class="new-comment-skeleton" id="new-comment-skeleton-{{ post_type }}-{{ post.id }}">
+            <table class="comment" id="comment-%ID%" style="display: none">
+                <tr>
+                    <td rowspan="2" class="comment-score" id="comment-%ID%-score"></td>
+                    <td class="comment-text" id="comment-%ID%-text">%COMMENT%</td>
+                </tr>
+                <tr>
+                    <td class="comment-info" id="comment-%ID%-info">
+                        <a class="comment-user" href="%PROFILE_URL%">%USERNAME%</a>
+                        <span class="comment-age">({% trans "just now" %})</span>
+                        <a id="comment-%ID%-edit" href="#"
+                            class="comment-edit" rel="nofollow"> </a>
+                        <a id="comment-%ID%-delete" href="%DELETE_URL%"
+                            class="ajax-command comment-delete" rel="nofollow"> </a>
+                    </td>
+                </tr>
+            </table>
+        </script>
+    </form>
+</div>
+{% endif %}
+    

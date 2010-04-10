@@ -1,0 +1,30 @@
+{% load i18n %}
+
+<h3 class="subtitle">{% trans "Subscription" %}:</h3>
+{% if request.user.is_authenticated %}
+    <div class="subscription-status">
+        {% if subscription %}
+            {% if subscription.auto_subscription %}
+                <p>{% trans "You were automatically subscribed to this question." %}</p>
+            {% else %}
+                <p>{% trans "You are subscribed to this question." %}</p>
+            {% endif %}
+        {% else %}
+            <p>{% trans "You are not subscribed to this question." %}</p>
+        {% endif %}
+    </div>
+    <p><a class="ajax-command sidebar_button subscription_switch" href="{% url subscribe id=question.id %}">
+        {% if subscription %}
+            {% trans "unsubscribe me" %}
+        {% else %}
+            {% trans "subscribe me" %}
+        {% endif %}
+    </a></p>
+    <p>
+        {% blocktrans with request.user.get_profile_url as profile_url %}
+            (you can adjust your notification settings on your <a href="{{ profile_url }}?sort=email_subscriptions">profile</a>)
+        {% endblocktrans %}
+    </p>
+{% else %}
+    <p>{% trans "Once you sign in you will be able to subscribe for any updates here" %}</p>
+{% endif %}

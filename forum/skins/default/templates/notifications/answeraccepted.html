@@ -1,0 +1,17 @@
+{% extends "email_base.html" %}
+{% load i18n %}
+{% load extra_tags %}
+
+{% block content %}
+    <p>{% trans "Hello" %} {% user_var username %},</p>
+
+    <p>
+        {% blocktrans with answer.accepted_by.username as accepter and answer.author.username as answer_author and settings.APP_SHORT_NAME as app_title and settings.APP_URL as app_url and question.get_absolute_url as question_url and question.title as question_title %}
+        Just to let you know that {{ accepter }} has just accepted {{ answer_author }}'s answer on his question
+        <a href="{{ app_url }}{{ question_url }}">{{ question_title }}</a>:
+        {% endblocktrans %}
+    </p>
+
+    <p>{% blocktrans %}Sincerely,<br />
+    Forum Administrator{% endblocktrans %}</p>
+{% endblock %}

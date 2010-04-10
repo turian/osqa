@@ -1,0 +1,23 @@
+{% load i18n %}
+
+{% spaceless %}
+    {% include "users/info_small_lite.html" %}
+    {% if gold %}
+    <span title="{{ gold }} {% trans "badges" %}">
+        <span class="badge1">&#9679;</span>
+        <span class="badgecount">{{ gold }}</span>
+    </span>
+    {% endif %}
+    {% if silver %}
+    <span title="{{ silver }} {% trans "badges" %}">
+        <span class="silver">&#9679;</span>
+        <span class="badgecount">{{ silver }}</span>
+    </span>
+    {% endif %}
+    {% if bronze %}
+    <span title="{{ bronze }} {% trans "badges" %}">
+        <span class="bronze">&#9679;</span>
+        <span class="badgecount">{{ bronze }}</span>
+    </span>
+    {% endif %}
+{% endspaceless %}

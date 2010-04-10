@@ -1,0 +1,79 @@
+{% extends "email_base.html" %}
+{% load i18n %}
+{% load humanize %}
+{% load extra_tags %}
+
+{% block content %}
+    <p>{% trans "Hello" %} {{ user.username }},</p>
+
+    <p>{% blocktrans with settings.APP_SHORT_NAME as app_title %}
+    This is the {{ digest_type }} activity digest for {{ app_title }}
+    {% endblocktrans %}</p>
+
+    {% if new_users %}
+        <h3>
+        {% blocktrans with new_users|length as nusers_count and new_users|length|pluralize as nusers_count_pluralize and settings.APP_SHORT_NAME as app_title %}
+            {{ nusers_count }} new user{{ nusers_count_pluralize }} joined the {{ app_title }} community:
+        {% endblocktrans %}
+        </h3>
+        <ul>
+        {% for nuser in new_users %}
+            <li><a href="{{ settings.APP_URL }}{{ nuser.get_profile_url }}">{{ nuser.username }}</a></li>        
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if activity_in_subscriptions %}
+        <h3>
+        {% blocktrans with activity_in_subscriptions|length as question_count and activity_in_subscriptions|length|pluralize as question_count_pluralize %}
+            {{ question_count }} of your subscriptions have updates:
+        {% endblocktrans %}
+        </h3>
+        <ul>
+        {% for record in activity_in_subscriptions %}
+            <li>
+            {% trans "On question " %}<a href="{{ settings.APP_URL }}{{ record.question.get_absolute_url }}">{{ question_title }}" %}</a> -
+            {% if record.activity.answers %}
+                {% blocktrans with record.activity.answers|length as answer_count and record.activity.answers|length|pluralize as answer_count_pluralize %}
+                    {{ answer_count }} new answer{{ answer_count_pluralize }}
+                {% endblocktrans %},
+            {% endif %}
+            {% if record.activity.comments %}
+                {% blocktrans with record.activity.comments|length as comment_count and record.activity.comments|length|pluralize as comment_count_pluralize %}
+                    {{ comment_count }} new comment{{ comment_count_pluralize }}
+                {% endblocktrans %}
+                {% if own_comments_only %}
+                    {% trans "on your own post(s)" %}
+                {% endif %},
+            {% endif %}
+            {% if record.accepted %}
+                {% trans "an answer was accepted" %}
+            {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if new_questions %}
+        <h3>
+        {% blocktrans with new_questions|length as question_count and new_questions|length|pluralize as question_count_pluralize%}
+            {{ question_count }} new question{{ question_count_pluralize }}
+        {% endblocktrans %}
+        {% if watched_tags_only %}
+            {% trans "matching your interesting tags" %}
+        {% endif %}
+        {% trans "posted :" %}
+        </h3>
+        <ul>
+        {% for question in new_questions %}
+            <li>
+                <a href="{{ settings.APP_URL }}{{ question.get_absolute_url }}">{{ question.title }}</a> -
+                {% blocktrans with question.author.username as author_name and question.added_at|date:"D d M Y" as question_time %}
+                    Posted by {{ author_name }} in {{ question_time }}
+                {% endblocktrans %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+{% endblock %}

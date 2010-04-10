@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+<!-- question.html -->
+{% load question_page_tags %}
+{% load extra_tags %}
+{% load extra_filters %}
+{% load smart_if %}
+{% load humanize %}
+{% load i18n %}
+{% load cache %}
+{% block title %}{% spaceless %}{{ question.get_question_title }}{% endspaceless %}{% endblock %}
+{% block forejs %}
+        <meta name="description" content="{{question.summary}}" />
+        <meta name="keywords" content="{{question.tagname_meta_generator}}" />
+        <link rel="canonical" href="{{settings.APP_URL}}{{question.get_absolute_url}}" />
+        {% if not question.closed %}
+        <script type='text/javascript' src='{% media  "/media/js/wmd/showdown.js" %}'></script>
+        <script type='text/javascript' src='{% media  "/media/js/wmd/wmd.js" %}'></script>
+        <link rel="stylesheet" type="text/css" href="{% media  "/media/js/wmd/wmd.css" %}" />
+        {% endif %}
+
+        <script type="text/javascript">
+        // define reputation needs for comments
+        var repNeededForComments = 50;
+        $().ready(function(){
+            $("#nav_questions").attr('className',"on");
+            var answer_sort_tab = "{{ tab_id }}";
+            $("#" + answer_sort_tab).attr('className',"on");
+
+            $('#editor').TextAreaResizer();
+        });
+        </script>
+        <noscript>
+            <style>
+                .comment.not_top_scorer {
+                    display: block;
+                }
+                .comment-form-container {
+                    display: block;
+                }
+                .div.comment-tools {
+                    display: none;
+                }
+            </style>
+        </noscript>
+{% endblock %}
+        
+{% block content %}
+<div class="headNormal">
+    <a href="{{ question.get_absolute_url }}">{{ question.get_question_title }}</a>
+</div>
+<div id="main-body" class="">
+    <div id="askform">
+            <table style="width:100%;" id="question-table" {% if question.deleted %}class="deleted"{%endif%}>
+                <tr>
+                    <td style="width:30px;vertical-align:top">
+                        <div class="vote-buttons">
+                            {% vote_buttons question request.user %}
+                            {% favorite_mark question request.user %}                            
+                        </div>
+                    </td>
+                    <td>
+                        <div id="item-right">
+                            <div class="question-body">
+                                {{ question.html|safe }}
+                            </div>
+                            <div id="question-controls" class="post-controls">
+                                <div id="question-tags" class="tags">
+                                    {% for tag in question.tagname_list %}
+                                        <a href="{% url tag_questions tag|urlencode %}" class="post-tag"
+                                            title="{% blocktrans with tag as tagname %}see questions tagged '{{ tagname }}'{% endblocktrans %}" rel="tag">{{ tag }}</a>
+                                    {% endfor %}
+                                </div>
+                                {% post_controls question request.user %}
+                            </div>
+                            <div class="post-update-info-container">
+                                    {% post_contributor_info question "original_author" %}
+                                    {% post_contributor_info question "last_updater" %}
+                            </div>
+                            {% comments question request.user %}
+                        </div>
+                        
+                    </td>
+                </tr>
+            </table>
+            {% if question.closed %}
+            <div class="question-status" style="margin-bottom:15px">
+            <h3>{% blocktrans with question.get_close_reason_display as close_reason %}The question has been closed for the following reason "{{ close_reason }}" by{% endblocktrans %} 
+            <a href="{{ question.closed_by.get_profile_url }}">{{ question.closed_by.username }}</a> 
+            {% blocktrans with question.closed_at as closed_at %}close date {{closed_at}}{% endblocktrans %}</h3>
+            </div>
+            {% endif %}
+            {% if answers %}
+                <hr/>
+                <div class="tabBar">
+                    <a name="sort-top"></a>
+                    <div class="headQuestions">
+                    {% blocktrans count answers|length as counter %}
+                    One Answer:
+                    {% plural %}
+                    {{counter}} Answers:
+                    {% endblocktrans %}
+                    </div>
+                    <div class="tabsA">
+                         <a id="oldest" href="{{ question.get_absolute_url }}?sort=oldest#sort-top"
+                            title="{% trans "oldest answers will be shown first" %}">{% trans "oldest answers" %}</a>
+                        <a id="latest" href="{{ question.get_absolute_url }}?sort=latest#sort-top"
+                            title="{% trans "newest answers will be shown first" %}">{% trans "newest answers" %}</a>
+                        <a id="votes" href="{{ question.get_absolute_url }}?sort=votes#sort-top" 
+                            title="{% trans "most voted answers will be shown first" %}">{% trans "popular answers" %}</a>   
+                    </div>
+                </div>
+                {% cnprog_paginator context %}
+  
+                {% for answer in answers %}
+                    <a name="{{ answer.id }}"></a>
+                    <div id="answer-container-{{ answer.id }}" class="answer {% if answer.accepted %}accepted-answer{% endif %} {% ifequal answer.author_id question.author_id %} answered-by-owner{% endifequal %} {% if answer.deleted %}deleted{% endif %}">
+                        <table style="width:100%;">
+                            <tr>
+                                <td style="width:30px;vertical-align:top">
+                                    <div class="vote-buttons">
+                                        {% vote_buttons answer request.user %}
+                                        {% accept_button answer request.user %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="item-right">
+                                        <div class="answer-body">
+                                            {{ answer.html|safe }}
+                                        </div>
+                                        <div class="answer-controls post-controls">
+                                            {% post_controls answer request.user %}
+                                        </div>
+                                        <div class="post-update-info-container">
+                                                {% post_contributor_info answer "original_author" %}
+                                                {% post_contributor_info answer "last_updater" %}
+                                        </div>
+                                        {% comments answer request.user %}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                {% endfor %}
+                <div class="paginator-container-left">
+                    {% cnprog_paginator context %}
+                </div>
+            {% endif %}
+        <form id="fmanswer" action="{% url answer question.id %}" method="post">
+            <div style="clear:both">
+            </div>
+            
+            {% if not question.closed %}
+                <div style="padding:10px 0 0 0;">
+                    {% spaceless %}
+                    <div class="headNormal">
+                        {% if answers %}
+                            {% trans "Your answer" %}
+                        {% else %}
+                            {% trans "Be the first one to answer this question!" %}
+                        {% endif %}
+                    </div>
+                    {% endspaceless %}
+                </div>
+                {% if not request.user.is_authenticated %}
+                    <div class="message">{% trans "you can answer anonymously and then login" %}</div>
+                {% else %}
+                    <p class="message">
+                        {% ifequal request.user question.author  %}
+                            {% trans "answer your own question only to give an answer" %}
+                        {% else %}
+                            {% trans "please only give an answer, no discussions" %}
+                        {% endifequal %}
+                    </p>
+                {% endif %}
+
+                <div id="description" class="" >
+                    <div id="wmd-button-bar" class="wmd-panel"></div>
+                    {{ answer.text }}
+                    <div class="preview-toggle">
+                        <table width="100%">
+                            <tr>
+                                <td>
+                                    <span id="pre-collapse" 
+                                        title="{% trans "Toggle the real time Markdown editor preview" %}">
+                                            {% trans "toggle preview" %}
+                                    </span>
+                                </td>
+                                {% if settings.WIKI_ON %}
+                                <td style="text-align:right;">
+                                    {{ answer.wiki }} 
+                                    <span style="font-weight:normal;cursor:help" 
+                                        title="{{answer.wiki.help_text}}">
+                                            {{ answer.wiki.label_tag }} 
+                                    </span>
+                                </td>
+                                {% endif %}
+                            </tr>
+                        
+                        </table>  
+                    </div>
+                    <div id="previewer" class="wmd-preview"></div>
+                    {{ answer.text.errors }}
+                </div>
+                <p><span class="form-error"></span></p>
+                <input type="submit" 
+                    {% if user.is_anonymous %}
+                        value="{% trans "Login/Signup to Post Your Answer" %}" 
+                    {% else %}
+                        {% if user == question.author %}
+                        value="{% trans "Answer Your Own Question" %}" 
+                        {% else %}
+                        value="{% trans "Answer the question" %}" 
+                        {% endif %}
+                    {% endif %}
+                    class="submit" style="float:left"/>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div class="boxC" id="subscription_box">
+    {% include "subscription_status.html" %}
+</div>
+{% cache 60 questions_tags settings.APP_URL question.id %}
+<div class="boxC">
+    <p>
+		{% trans "Question tags" %}:
+    </p>
+    <p class="tags" >
+        {% for tag in tags %}
+        	<a href="{% url tag_questions tag.name|urlencode %}" 
+			title="{% trans "see questions tagged"%}'{{tag.name}}'{% trans "using tags" %}" 
+			rel="tag">{{ tag.name }}</a> <span class="tag-number">&#215;{{ tag.used_count|intcomma }}</span><br/>
+        {% endfor %}
+    </p>
+    <p>
+        {% trans "question asked" %}: <strong title="{{ question.added_at }}">{% diff_date question.added_at %}</strong>
+    </p>
+    <p> 
+     	{% trans "question was seen" %}: <strong>{{ question.view_count|intcomma }} {% trans "times" %}</strong>
+    </p>
+    <p> 
+        {% trans "last updated" %}: <strong title="{{ question.last_activity_at }}">{% diff_date question.last_activity_at %}</strong>
+    </p>
+</div>
+{% endcache %}
+<div class="boxC">
+    <h3 class="subtitle">{% trans "Related questions" %}</h3>
+    <div class="questions-related">
+
+        {% for question in similar_questions %}
+        <p>
+            <a href="{{ question.get_absolute_url }}">{{ question.get_question_title }}</a>
+        </p>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block endjs %}
+{% endblock %}
+<!-- end question.html -->
