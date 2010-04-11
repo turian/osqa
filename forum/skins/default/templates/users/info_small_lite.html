@@ -1,6 +1,1 @@
-{% load i18n %}
-
-{% spaceless %}
-    <a href="{{ url }}">{{ name }}</a>&nbsp;
-    <span class="score" title="{{ reputation }} {% trans "reputation" %}">{{ reputation }}</span>
-{% endspaceless %}
+{% load i18n %}<a href="{{ url }}">{{ name }}</a> <span class="score" title="{{ reputation }} {% trans "reputation" %}">{{ reputation }}</span>
