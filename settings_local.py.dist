@@ -40,7 +40,7 @@ DATABASE_PORT = ''
 
 #CACHE_BACKEND = 'file://%s' % os.path.join(os.path.dirname(__file__),'cache').replace('\\','/')
 CACHE_BACKEND = 'dummy://'
-#SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 APP_URL = 'http://' #used by email notif system and RSS
 
