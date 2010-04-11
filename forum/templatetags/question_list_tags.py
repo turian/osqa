@@ -9,6 +9,10 @@ register = template.Library()
 def question_list_item(question):
     return {'question': question}
 
+@register.inclusion_tag('question_list/item_extended.html')
+def question_list_item_extended(question):
+    return {'question': question}
+
 @register.inclusion_tag('question_list/sort_tabs.html')
 def question_sort_tabs(sort_context):
     return sort_context

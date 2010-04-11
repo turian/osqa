@@ -2646,3 +2646,6 @@ d:\osqa\dev\osqa\forum\models\user.py TIME: 2010-04-09 11:39:45,875 MSG: user.py
 d:\osqa\dev\osqa\forum\models\user.py TIME: 2010-04-09 11:39:45,881 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/4/evgeny-fadeev">Evgeny Fadeev</a>
 d:\osqa\dev\osqa\forum\models\user.py TIME: 2010-04-09 11:39:45,927 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/3/rickross">rickross</a>
 d:\osqa\dev\osqa\forum\models\user.py TIME: 2010-04-09 11:39:45,943 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/4/evgeny-fadeev">Evgeny Fadeev</a>
+d:\osqa\fromsvn\forum\models\user.py TIME: 2010-04-11 15:50:54,022 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/3/rickross">rickross</a>
+d:\osqa\fromsvn\forum\models\user.py TIME: 2010-04-11 15:50:54,124 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/51/dz_brandon">DZ_Brandon</a>
+d:\osqa\fromsvn\forum\models\user.py TIME: 2010-04-11 18:23:14,994 MSG: user.py:get_profile_link:126 in get profile link <a href="/users/66/dealsvista_com">DealsVista_com</a>

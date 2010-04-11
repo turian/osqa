@@ -4,12 +4,12 @@
     <facet type="django" name="Django">
       <configuration>
         <option name="rootFolder" value="$MODULE_DIR$" />
-        <option name="templatesFolder" value="" />
-        <option name="settingsModule" value="osqa" />
+        <option name="templatesFolder" value="$MODULE_DIR$/forum/skins/default/templates" />
+        <option name="settingsModule" value="settings.py" />
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

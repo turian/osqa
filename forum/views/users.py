@@ -145,46 +145,12 @@ def edit_user(request, id):
 
 def user_stats(request, user_id, user_view):
     user = get_object_or_404(User, id=user_id)
-    questions = Question.objects.extra(
-        select={
-            'vote_count' : 'question.score',
-            'favorited_myself' : 'SELECT count(*) FROM favorite_question f WHERE f.user_id = %s AND f.question_id = question.id',
-            'la_user_id' : 'auth_user.id',
-            'la_username' : 'auth_user.username',
-            'la_user_gold' : 'forum_user.gold',
-            'la_user_silver' : 'forum_user.silver',
-            'la_user_bronze' : 'forum_user.bronze',
-            'la_user_reputation' : 'forum_user.reputation'
-            },
-        select_params=[user_id],
-        tables=['question', 'auth_user', 'forum_user'],
-        where=['NOT question.deleted AND question.author_id=%s AND question.last_activity_by_id = auth_user.id AND forum_user.user_ptr_id = auth_user.id'],
-        params=[user_id],
-        order_by=['-vote_count', '-last_activity_at']
-    ).values('vote_count',
-             'favorited_myself',
-             'id',
-             'title',
-             'author_id',
-             'added_at',
-             'answer_accepted',
-             'answer_count',
-             'comment_count',
-             'view_count',
-             'favourite_count',
-             'summary',
-             'tagnames',
-             'vote_up_count',
-             'vote_down_count',
-             'last_activity_at',
-             'la_user_id',
-             'la_username',
-             'la_user_gold',
-             'la_user_silver',
-             'la_user_bronze',
-             'la_user_reputation')[:100]
 
-    answered_questions = Question.objects.extra(
+    questions = Question.objects.filter(deleted=False, author=user).order_by('-added_at')
+
+    answered_questions = Question.objects.filter(deleted=False, answers__author=user).distinct()
+
+    """answered_questions = Question.objects.extra(
         select={
             'vote_up_count' : 'answer.vote_up_count',
             'vote_down_count' : 'answer.vote_down_count',
@@ -207,17 +173,17 @@ def user_stats(request, user_id, user_view):
                         'vote_count',
                         'answer_count',
                         'vote_up_count',
-                        'vote_down_count')[:100]
+                        'vote_down_count')[:100]"""
 
     up_votes = user.get_up_vote_count()
     down_votes = user.get_down_vote_count()
     votes_today = user.get_vote_count_today()
     votes_total = int(settings.MAX_VOTES_PER_DAY)
 
-    question_id_set = set(map(lambda v: v['id'], list(questions))) \
-                        | set(map(lambda v: v['id'], list(answered_questions)))
+    #question_id_set = set(map(lambda v: v['id'], list(questions))) \
+    #                    | set(map(lambda v: v['id'], list(answered_questions)))
 
-    user_tags = Tag.objects.filter(questions__id__in = question_id_set)
+    user_tags = Tag.objects.filter(questions__author=user)
     try:
         from django.db.models import Count
         awards = Award.objects.extra(

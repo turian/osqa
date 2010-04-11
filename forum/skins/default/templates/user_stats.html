@@ -4,6 +4,7 @@
 {% load extra_tags %}
 {% load extra_filters %}
 {% load humanize %}
+{% load question_list_tags %}
 		{% block usercontent %}
 	
         <a name="questions"></a>
@@ -16,7 +17,12 @@
                 {% endblocktrans %}
             </h2>
         {% endspaceless %}
-		{% include "users_questions.html" %}
+		<div class="user-stats-table">
+		    {% for question in questions %}
+		        {% question_list_item_extended question %}
+		    {% endfor %}
+		</div>
+		<br clear="all"/>
         <a name="answers"></a>
         {% spaceless %}
             <h2>
