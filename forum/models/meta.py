@@ -115,7 +115,7 @@ class Comment(MetaContent, UserContent, DeletableContent):
     def is_reply_to(self, user):
         inreply = re.search('@\w+', self.comment)
         if inreply is not None:
-            return user.username.startswith(inreply[1:])
+            return user.username.startswith(inreply.group(0))
 
         return False
 
