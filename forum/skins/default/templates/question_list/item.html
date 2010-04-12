@@ -1,7 +1,11 @@
 {% load i18n humanize extra_filters extra_tags user_tags %}
 <div class="short-summary">
-    <div class="counts">
-        <div class="votes">
+    <div class="counts">{% if favorite_count %}
+        <div class="favorites">
+            <span class="favorite-mark{% if question.favourite_count %} on{% endif %}"></span>
+            <div class="item-count">{{question.favourite_count|intcomma}}</div>
+        </div>
+        {% endif %}<div class="votes">
             <div class="item-count">{{question.score|intcomma}}</div>
             <div>{% trans "votes" %}</div>
         </div >
@@ -15,10 +19,10 @@
         </div>
     </div>
 
-    <h2><a title="{{question.summary}}" href="{{ question.get_absolute_url }}">{{question.title}}</a></h2>
+    <h2><a title="{{question.summary.split|join:" "}}" href="{{ question.get_absolute_url }}">{{question.title}}</a></h2>
     <div class="userinfo">
         <span class="relativetime" title="{{question.last_activity_at}}">{% diff_date question.last_activity_at %}</span>
-        {% if question.last_activity_by %}{% user_signature_small_lite question.last_activity_by %}{% endif %}
+        {% if question.last_activity_by %}{% user_signature question.last_activity_by signature_type %}{% endif %}
     </div>
 
     <div class="tags">{% for tag in question.tagname_list %}

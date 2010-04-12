@@ -24,11 +24,9 @@
     {% question_list_title %}
     {% question_sort_tabs sort_context %}
 </div>
-<div id="listA">
-{% for question in questions %}
+<div id="listA">{% for question in questions %}
     {% question_list_item question %}
-{% endfor %}
-</div>
+{% endfor %}</div>
 {% endblock %}
 
 {% block tail %}

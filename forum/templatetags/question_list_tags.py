@@ -2,16 +2,29 @@ from django import template
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 from forum.models import Tag, MarkedTag
+from forum.templatetags import argument_parser
 
 register = template.Library()
 
-@register.inclusion_tag('question_list/item.html')
-def question_list_item(question):
-    return {'question': question}
+class QuestionItemNode(template.Node):
+    template = template.loader.get_template('question_list/item.html')
 
-@register.inclusion_tag('question_list/item_extended.html')
-def question_list_item_extended(question):
-    return {'question': question}
+    def __init__(self, question, options):
+        self.question = template.Variable(question)
+        self.options = options
+
+    def render(self, context):
+        return self.template.render(template.Context({
+            'question': self.question.resolve(context),
+            'favorite_count': self.options.get('favorite_count', 'no') == 'yes',
+            'signature_type': self.options.get('signature_type', 'lite'),
+        }))
+
+@register.tag
+def question_list_item(parser, token):
+    tokens = token.split_contents()[1:]
+    return QuestionItemNode(tokens[0], argument_parser(tokens[1:]))
+    
 
 @register.inclusion_tag('question_list/sort_tabs.html')
 def question_sort_tabs(sort_context):

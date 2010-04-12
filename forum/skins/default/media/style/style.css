@@ -530,6 +530,12 @@ blockquote {
     color: #666666;
 }
 
+.short-summary .favorites {
+    width: 24px;
+    float: left;
+    text-align: center;
+}
+
 #question-table {
     margin-bottom: 10px;
 }
@@ -1163,7 +1169,7 @@ div.comments-container, div.comments-container-accepted, div.comments-container-
     color: #314362;
 }
 
-.answered-accepted {
+.answer-votes.answered-accepted {
     background: none repeat scroll 0 0 #E6F8DD;
     color: #3A6231;
 }
@@ -1847,6 +1853,7 @@ div.started .reputation-score {
     color: #333333;
     font-size: 110%;
     font-weight: bold;
+    margin-left: 3px;
 }
 
 .footerLinks {
@@ -2296,7 +2303,7 @@ a.sidebar_button:hover {
     text-decoration: none;
 }
 
-a.post-vote, a.favorite-mark, a.accept-answer {
+a.post-vote, .favorite-mark, a.accept-answer {
     display: block;
     height: 24px;
     position: relative;
@@ -2335,11 +2342,11 @@ a.accept-answer.on, a.accept-answer:hover {
     padding: 0 0 3px;
 }
 
-a.favorite-mark {
+.favorite-mark {
     background: url("/m/default/media/images/vote-favorite-off.png") no-repeat scroll center center transparent;
 }
 
-a.favorite-mark.on, a.favorite-mark:hover {
+.favorite-mark.on, a.favorite-mark:hover {
     background: url("/m/default/media/images/vote-favorite-on.png") no-repeat scroll center center transparent;
 }
 

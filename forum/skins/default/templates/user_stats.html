@@ -19,14 +19,14 @@
         {% endspaceless %}
 		<div class="user-stats-table">
 		    {% for question in questions %}
-		        {% question_list_item_extended question %}
+		        {% question_list_item question favorite_count=yes signature_type=badges %}
 		    {% endfor %}
 		</div>
 		<br clear="all"/>
         <a name="answers"></a>
         {% spaceless %}
             <h2>
-                {% blocktrans count answered_questions|length as counter %}
+                {% blocktrans count answers|length as counter %}
                 <span class="count">1</span> Answer
                 {% plural %}
                 <span class="count">{{counter}}</span> Answers
@@ -34,22 +34,22 @@
             </h2>
         {% endspaceless %}
         <div class="user-stats-table">
-            {% for answered_question in answered_questions %}
+            {% for answer in answers %}
             <div class="answer-summary">
-                <a title="{{answered_question.summary|collapse}}" 
-                    href="{{ answered_question.get_absolute_url }}#{{answered_question.answer_id}}">
-                    <span class="answer-votes {% if answered_question.accepted %}answered-accepted{% endif %}" 
-						title="{% blocktrans with answered_question.vote_count as vote_count %}the answer has been voted for {{ vote_count }} times{% endblocktrans %} {% if answered_question.accepted %}{% trans "this answer has been selected as correct" %}{%endif%}">
-                        {{ answered_question.vote_count }}
+                <a title="{{answer.question.title}}"
+                    href="{{ answer.get_absolute_url }}">
+                    <span class="{% if answer.accepted %}answered-accepted {% endif %} answer-votes" 
+						title="{% blocktrans with answer.score as vote_count %}the answer has been voted for {{ vote_count }} times{% endblocktrans %} {% if answer.accepted %}{% trans "this answer has been selected as correct" %}{%endif%}">
+                        {{ answer.score }}
                     </span>
                 </a>
                 <div class="answer-link">
                     {% spaceless %}
-                    <a href="{{ answered_question.get_absolute_url }}#{{answered_question.answer_id}}">{{answered_question.title}}</a> 
+                    <a href="{{ answer.get_absolute_url }}#{{answer.id}}">{{answer.question.title}}</a>
                     {% endspaceless %}
-                    {% if answered_question.comment_count %}
+                    {% if answer.comment_count %}
                     <span>
-				    {% blocktrans count answered_question.comment_count as comment_count %}
+				    {% blocktrans count answer.comment_count as comment_count %}
                     (one comment)
                     {% plural %}
                     the answer has been commented {{comment_count}} times

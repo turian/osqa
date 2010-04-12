@@ -1,0 +1,28 @@
+{% load i18n %}{% spaceless %}
+{% ifequal format "full" %}
+
+{% else %}
+    <a href="{{ user.get_absolute_url }}">{{ user.username }}</a>
+    <span class="score" title="{{ user.reputation }} {% trans "reputation" %}">{{ user.reputation }}</span>
+    {% ifequal format "badges" %}
+        {% if user.gold %}
+        <span title="{{ user.gold }} {% trans "badges" %}">
+            <span class="badge1">&#9679;</span>
+            <span class="badgecount">{{ user.gold }}</span>
+        </span>
+        {% endif %}
+        {% if user.silver %}
+        <span title="{{ user.silver }} {% trans "badges" %}">
+            <span class="silver">&#9679;</span>
+            <span class="badgecount">{{ user.silver }}</span>
+        </span>
+        {% endif %}
+        {% if user.bronze %}
+        <span title="{{ user.bronze }} {% trans "badges" %}">
+            <span class="bronze">&#9679;</span>
+            <span class="badgecount">{{ user.bronze }}</span>
+        </span>
+        {% endif %}
+    {% endifequal %}
+{% endifequal %}
+{% endspaceless %}
