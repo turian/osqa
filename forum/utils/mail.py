@@ -88,7 +88,8 @@ def send_email(subject, recipients, template, context={}, sender=None, images=[]
     if sender is None:
         sender = (str(settings.APP_SHORT_NAME), str(settings.DEFAULT_FROM_EMAIL))
 
-    images.append((os.path.join(str(settings.UPFILES_FOLDER), os.path.basename(str(settings.APP_LOGO))), 'logo'))
+    if not len(images):
+        images = [(os.path.join(str(settings.UPFILES_FOLDER), os.path.basename(str(settings.APP_LOGO))), 'logo')]
 
     context.update(application_settings(None))
     html_body = loader.get_template(template).render(Context(context))
