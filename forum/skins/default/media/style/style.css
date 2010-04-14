@@ -1169,7 +1169,7 @@ div.comments-container, div.comments-container-accepted, div.comments-container-
     color: #314362;
 }
 
-.answer-votes, .answer-votes.answered-accepted {
+.answered-accepted, .answer-votes.answered-accepted {
     background: none repeat scroll 0 0 #E6F8DD;
     color: #3A6231;
 }
