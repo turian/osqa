@@ -86,6 +86,12 @@
                     <td>{% get_age view_user.date_of_birth %} {% trans "age unit" %}</td>
                 </tr>
                 {% endif %}
+                {% if request.user.is_superuser %}
+                <tr>
+                    <td>{% trans "email" %}</td>
+                    <td><a href="mailto: {{ view_user.email }}">{{ view_user.email }}</a></td>
+                </tr>
+                {% endif %}
 				<!--
                 {% if votes_today_left %}
                 <tr>
