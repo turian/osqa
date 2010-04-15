@@ -113,8 +113,8 @@ def vote_post(request, id, vote_type):
     return response
 
 @command
-def flag_post(request, post_type, id):
-    post = get_object_or_404(post_type == "question" and Question or Answer, id=id)
+def flag_post(request, id):
+    post = get_object_or_404(Node, id=id)
     user = request.user
 
     if not user.is_authenticated():
@@ -132,18 +132,13 @@ def flag_post(request, post_type, id):
         raise NotEnoughLeftException(_('flags'), str(settings.MAX_FLAGS_PER_DAY))
 
     try:
-        post.flagged_items.get(user=user)
+        post.flaggeditems.get(user=user)
         raise CannotDoubleActionException(_('flag'))
     except ObjectDoesNotExist:
-        #there is no vote yet
         flag = FlaggedItem(user=user, content_object=post)
         flag.save()
 
-    response = {
-
-    }
-
-    return response
+    return {}
         
 @command
 def like_comment(request, id):
@@ -297,8 +292,8 @@ def accept_answer(request, id):
     return {'commands': commands}
 
 @command    
-def delete_post(request, post_type, id):
-    post = get_object_or_404(post_type == "question" and Question or Answer, id=id)
+def delete_post(request, id):
+    post = get_object_or_404(Node, id=id)
     user = request.user
 
     if not user.is_authenticated():
@@ -311,7 +306,7 @@ def delete_post(request, post_type, id):
 
     return {
         'commands': {
-                'mark_deleted': [post_type, id]
+                'mark_deleted': [post.node_type, id]
             }
     }
 

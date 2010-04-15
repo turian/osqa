@@ -9,10 +9,10 @@ def on_flagged_item(instance, created, **kwargs):
     if not created:
         return
 
-    post = instance.content_object
+    post = instance.content_object.leaf
     question = (post.__class__ == Question) and post or post.question
 
-    user.reputes.create(value=-int(settings.REP_LOST_BY_FLAGGED), question=question,
+    post.author.reputes.create(value=-int(settings.REP_LOST_BY_FLAGGED), question=question,
                reputation_type=TYPE_REPUTATION_LOST_BY_FLAGGED)
 
 
@@ -50,7 +50,7 @@ post_save.connect(on_answer_accepted_switch, sender=Answer)
 
 def on_vote(instance, created, **kwargs):
     if created and not instance.content_object.wiki:
-        post = instance.content_object
+        post = instance.content_object.leaf
         question = (post.__class__ == Question) and post or post.question
 
         if instance.vote == -1:
@@ -71,7 +71,7 @@ post_save.connect(on_vote, sender=Vote)
 
 def on_vote_canceled(instance, **kwargs):
     if not instance.content_object.wiki:
-        post = instance.content_object
+        post = instance.content_object.leaf
         question = (post.__class__ == Question) and post or post.question
 
         if instance.vote == -1:

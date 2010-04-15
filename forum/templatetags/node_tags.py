@@ -69,11 +69,16 @@ def post_controls(post, user):
                 controls.append(post_control(_('close'), reverse('close', kwargs={'id': post.id})))
 
         if user.can_flag_offensive(post):
-            controls.append(post_control(_('flag'), reverse('flag_post', kwargs={'post_type': post_type, 'id': post.id}), 
+            label = _('flag')
+            
+            if user.can_view_offensive_flags(post):
+                label =  "%s (%d)" % (label, post.flaggeditems.count())
+
+            controls.append(post_control(label, reverse('flag_post', kwargs={'id': post.id}),
                     command=True, title=_("report as offensive (i.e containing spam, advertising, malicious text, etc.)")))
 
         if user.can_delete_post(post):
-            controls.append(post_control(_('delete'), reverse('delete_post', kwargs={'post_type': post_type, 'id': post.id}),
+            controls.append(post_control(_('delete'), reverse('delete_post', kwargs={'id': post.id}),
                     command=True))
 
     return {'controls': controls}
