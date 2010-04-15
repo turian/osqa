@@ -1,9 +1,10 @@
-from question import Question ,QuestionRevision, AnonymousQuestion, FavoriteQuestion, QuestionSubscription
-from answer import Answer, AnonymousAnswer, AnswerRevision
+from question import Question ,QuestionRevision, FavoriteQuestion, QuestionSubscription
+from answer import Answer, AnswerRevision
 from tag import Tag, MarkedTag
 from meta import Vote, Comment, FlaggedItem, LikedComment
 from user import User, Activity, ValidationHash, AuthKeyUserAssociation, SubscriptionSettings
 from repute import Badge, Award, Repute
+from node import Node, NodeRevision, NodeMetaClass, AnonymousNode
 from utils import KeyValue
 
 try:
@@ -23,8 +24,9 @@ def is_new(sender, instance, **kwargs):
 pre_save.connect(is_new)
 
 __all__ = [
-        'Question', 'QuestionRevision', 'FavoriteQuestion', 'AnonymousQuestion', 'QuestionSubscription',
-        'Answer', 'AnswerRevision', 'AnonymousAnswer',
+        'Node', 'NodeRevision', 'AnonymousNode', 
+        'Question', 'FavoriteQuestion', 'QuestionSubscription', 'QuestionRevision',
+        'Answer', 'AnswerRevision',
         'Tag', 'Comment', 'Vote', 'FlaggedItem', 'MarkedTag', 'LikedComment', 'Badge', 'Award', 'Repute',
         'Activity', 'ValidationHash', 'AuthKeyUserAssociation', 'SubscriptionSettings', 'KeyValue', 'User',
         ]
@@ -36,3 +38,5 @@ for k, v in get_modules_script_classes('models', models.Model).items():
     if not k in __all__:
         __all__.append(k)
         exec "%s = v" % k
+
+NodeMetaClass.setup_relations()

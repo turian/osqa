@@ -13,3 +13,4 @@ pip-log.txt
 *.zip
 tmp/*
 forum/upfiles/[^R]*
+.svn

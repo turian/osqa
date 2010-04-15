@@ -31,20 +31,13 @@ def record_comment_event(instance, created, **kwargs):
 post_save.connect(record_comment_event, sender=Comment)
 
 
-def record_question_revision_event(instance, created, **kwargs):
-    if created and instance.revision <> 1:
-        activity = Activity(user=instance.author, active_at=instance.revised_at, content_object=instance, activity_type=TYPE_ACTIVITY_UPDATE_QUESTION)
+def record_revision_event(instance, created, **kwargs):
+    if created and instance.revision <> 1 and instance.node.node_type in ('question', 'answer',):
+        activity_type = instance.node == 'question' and TYPE_ACTIVITY_UPDATE_QUESTION or TYPE_ACTIVITY_UPDATE_ANSWER
+        activity = Activity(user=instance.author, active_at=instance.revised_at, content_object=instance, activity_type=activity_type)
         activity.save()
 
-post_save.connect(record_question_revision_event, sender=QuestionRevision)
-
-
-def record_answer_revision_event(instance, created, **kwargs):
-    if created and instance.revision <> 1:
-        activity = Activity(user=instance.author, active_at=instance.revised_at, content_object=instance, activity_type=TYPE_ACTIVITY_UPDATE_ANSWER)
-        activity.save()
-
-post_save.connect(record_answer_revision_event, sender=AnswerRevision)
+post_save.connect(record_revision_event, sender=NodeRevision)
 
 
 def record_award_event(instance, created, **kwargs):

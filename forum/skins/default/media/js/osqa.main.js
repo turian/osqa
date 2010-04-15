@@ -1,12 +1,12 @@
 var response_commands = {
-    update_post_score: function(type, id, inc) {
-        var $score_board = $('#' + type + '-' + id + '-score');
+    update_post_score: function(id, inc) {
+        var $score_board = $('#post-' + id + '-score');
         $score_board.html(parseInt($score_board.html()) + inc)
     },
 
-    update_user_post_vote: function(type, id, vote_type) {
-        var $upvote_button = $('#' + type + '-' + id + '-upvote');
-        var $downvote_button = $('#' + type + '-' + id + '-downvote');
+    update_user_post_vote: function(id, vote_type) {
+        var $upvote_button = $('#post-' + id + '-upvote');
+        var $downvote_button = $('#post-' + id + '-downvote');
 
         $upvote_button.removeClass('on');
         $downvote_button.removeClass('on');
@@ -89,9 +89,9 @@ var response_commands = {
         });
     },
 
-    insert_comment: function(post_type, post_id, comment_id, comment, username, profile_url, delete_url) {
-        var $container = $('#comments-container-' + post_type + '-' + post_id);
-        var skeleton = $('#new-comment-skeleton-' + post_type + '-' + post_id).html().toString();
+    insert_comment: function(post_id, comment_id, comment, username, profile_url, delete_url) {
+        var $container = $('#comments-container-' + post_id);
+        var skeleton = $('#new-comment-skeleton-' + post_id).html().toString();
 
         skeleton = skeleton.replace(new RegExp('%ID%', 'g'), comment_id)
                 .replace(new RegExp('%COMMENT%', 'g'), comment)

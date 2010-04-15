@@ -22,7 +22,7 @@ class Vote(MetaContent, UserContent):
         return '[%s] voted at %s: %s' %(self.user, self.voted_at, self.vote)
 
     def _update_post_vote_count(self, diff):
-        post = self.content_object
+        post = self.node
         field = self.vote == 1 and 'vote_up_count' or 'vote_down_count'
         post.__dict__[field] = post.__dict__[field] + diff
         post.save()
@@ -62,7 +62,7 @@ class FlaggedItem(MetaContent, UserContent):
         return '[%s] flagged at %s' %(self.user, self.flagged_at)
 
     def _update_post_flag_count(self, diff):
-        post = self.content_object
+        post = self.node
         post.offensive_flag_count = post.offensive_flag_count + diff
         post.save()
 
@@ -89,7 +89,7 @@ class Comment(MetaContent, UserContent, DeletableContent):
         db_table = u'comment'
 
     def _update_post_comment_count(self, diff):
-        post = self.content_object
+        post = self.node.leaf
         post.comment_count = post.comment_count + diff
         post.save()
 

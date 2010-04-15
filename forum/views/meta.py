@@ -10,16 +10,13 @@ from django.utils.translation import ugettext as _
 from forum.utils.forms import get_next_url
 from forum.models import Badge, Award
 from forum.badges import ALL_BADGES
-from markdown2 import Markdown
 from forum import settings
 
 def favicon(request):
     return HttpResponseRedirect(str(settings.APP_FAVICON))
 
 def about(request):
-    markdowner = Markdown(html4tags=True)
-    text = markdowner.convert(settings.ABOUT_PAGE_TEXT.value)
-    return render_to_response('about.html', {'text': text }, context_instance=RequestContext(request))
+    return render_to_response('about.html', {'text': settings.ABOUT_PAGE_TEXT.value }, context_instance=RequestContext(request))
 
 def faq(request):
     data = {

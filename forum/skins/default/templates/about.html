@@ -1,6 +1,7 @@
 {% extends "base_content.html" %}
 <!-- template about.html -->
 {% load i18n %}
+{% load markup %}
 {% block title %}{% spaceless %}{% trans "About" %}{% endspaceless %}{% endblock %}
 
 {% block content %}
@@ -8,7 +9,7 @@
 {% trans "About" %}
 </div>
 <div class="content">
-{{ text|safe }}
+{{ text|markdown }}
 </div>
 {% endblock %}
 <!-- end template about.html -->

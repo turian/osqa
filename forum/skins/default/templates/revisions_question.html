@@ -1,6 +1,5 @@
 {% extends "base_content.html" %}
-<!-- revisions_question.html -->
-<!--somehow very similar to revisions_answer.html-->
+
 {% load extra_tags %}
 {% load i18n %}
 {% load extra_filters %}
@@ -39,7 +38,7 @@
     <div id="revisions">
     {% for revision in revisions %}
       <div class="revision">
-        <div id="rev-header-{{ revision.revision }}" class="header {% ifequal post.author_id revision.author_id %}author{% endifequal %}">
+        <div id="rev-header-{{ revision.inst.revision }}" class="header {% ifequal post.author revision.inst.author %}author{% endifequal %}">
           <div class="header-controls">
             <table width="100%">
                 <tr>
@@ -47,19 +46,13 @@
                                                                 src="{% media  "/media/images/expander-arrow-show.gif" %}"
                                                                 alt="{% trans "click to hide/show revision" %}"/>
                     </td>
-                    <td width="30px" style="vertical-align:middle"><span class="revision-number" title="{% trans "revision" %} {{ revision.revision }}">{{ revision.revision }}</span></td>
+                    <td width="30px" style="vertical-align:middle"><span class="revision-number" title="{% trans "revision" %} {{ revision.inst.revision }}">{{ revision.inst.revision }}</span></td>
                     <td width="200px" style="vertical-align:middle">
-                        {% if revision.summary %}
                         <div class="summary"><span>{{ revision.summary }}</span></div>
-                        {% endif %}
-                        {% if request.user|can_edit_post:post %}
-                        <a href="{% url edit_question post.id %}?revision={{ revision.revision }}">{% trans "edit" %}</a>
-                        {% endif %}
-  
                     </td>
                     <td align="right">
                         <div class="revision-mark" >
-                            {% post_contributor_info revision %}
+                            {% post_contributor_info revision.inst %}
                         </div>
                     </td>
                 </tr>
@@ -67,7 +60,7 @@
             </table>
           </div>
         </div>
-        <div id="rev-body-{{ revision.revision }}" class="diff body">
+        <div id="rev-body-{{ revision.inst.revision }}" class="diff body">
             {{ revision.diff|safe }}
         </div>
       </div>
@@ -78,4 +71,3 @@
 
 {% block endjs %}
 {% endblock %}
-<!-- end revisions_question.html -->

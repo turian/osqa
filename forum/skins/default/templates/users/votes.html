@@ -18,11 +18,7 @@
                 {% endifequal %}
                 </div>
                 <div style="float:left;overflow:hidden;width:750px">
-                    {% ifequal vote.answer_id 0 %}
-                    <span class="question-title-link"><a href="{{ vote.get_absolute_url }}">{{ vote.title }}</a></span>
-                    {% else %}
-                    <span class="answer-title-link" ><a href="{{ vote.get_absolute_url }}#{{ vote.answer_id }}">{{ vote.title }}</a></span>
-                    {% endifequal %}
+                    <span class="{{ vote.node.node_type }}-title-link"><a href="{{ vote.node.leaf.get_absolute_url }}">{{ vote.node.leaf.headline }}</a></span>
                     <div style="height:5px"></div>
                 </div>          
             </div>

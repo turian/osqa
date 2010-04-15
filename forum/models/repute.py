@@ -55,7 +55,7 @@ class AwardManager(models.Manager):
         ).values('badge_id', 'badge_name', 'badge_description', 'badge_type', 'user_id', 'user_name')
         return awards
 
-class Award(MetaContent, UserContent):
+class Award(GenericContent, UserContent):
     """The awarding of a Badge to a User."""
     badge      = models.ForeignKey('Badge', related_name='award_badge')
     awarded_at = models.DateTimeField(default=datetime.datetime.now)

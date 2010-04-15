@@ -9,7 +9,7 @@
             <div class="item-count">{{question.score|intcomma}}</div>
             <div>{% trans "votes" %}</div>
         </div >
-        <div {% if question.answer_accepted %}title="{% trans "this answer has been accepted to be correct" %}"{% endif %} class="status {% if question.answer_accepted %}answered-accepted{% endif %} {% ifequal question.answer_count 0 %}unanswered{% endifequal %}{% ifnotequal question.answer_count 0 %}answered{% endifnotequal %}">
+        <div {% if question.answer_accepted %}title="{% trans "this question has an accepted answer" %}"{% endif %} class="status {% if question.answer_accepted %}answered-accepted{% endif %} {% ifequal question.answer_count 0 %}unanswered{% endifequal %}{% ifnotequal question.answer_count 0 %}answered{% endifnotequal %}">
             <div class="item-count">{{question.answer_count|intcomma}}</div>
             <div>{% trans "answers" %}</div>
         </div>
@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    <h2><a title="{{question.summary.split|join:" "}}" href="{{ question.get_absolute_url }}">{{question.title}}</a></h2>
+    <h2><a title="{{ question.summary }}" href="{{ question.get_absolute_url }}">{{question.headline}}</a></h2>
     <div class="userinfo">
         <span class="relativetime" title="{{question.last_activity_at}}">{% diff_date question.last_activity_at %}</span>
         {% if question.last_activity_by %}{% user_signature question.last_activity_by signature_type %}{% endif %}

@@ -1,10 +1,7 @@
 {% extends "osqaadmin/base.html" %}
 
 {% load i18n %}
-
-{% block adminjs %}
- 
-{% endblock %}
+{% load user_tags %}
 
 {% block subtitle %}
     {% trans "Dashboard" %}
@@ -66,12 +63,7 @@
                 <h3>{% trans "Recent activity" %}</h3>
                 <table width="100%">
                 {% for activity in recent_activity %}
-                <tr>
-                    <td>
-                        {{ activity.user.get_profile_link }} {{ activity.type_as_string }} {% trans "on" %} <a href="{{ activity.question.get_absolute_url }}">{{ activity.question.title }}</a><br />
-                        <sub>{{ activity.active_at|date }}, {{ activity.active_at|time }}</sub>
-                    </td>
-                </tr>
+                    {% activity_item activity %}
                 {% endfor %}
                 </table>
             </td>

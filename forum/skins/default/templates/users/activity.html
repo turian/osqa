@@ -1,0 +1,18 @@
+{% load extra_tags %}
+{% load humanize %}
+
+<div style="clear:both;line-height:20px" >
+    <div style="width:180px;float:left">{% diff_date active_at 3 %}</div>
+    <div style="width:150px;float:left">
+    <span class="user-action-{{ type }}">{{ description }}</span>
+    </div>
+    <div style="float:left;overflow:hidden;">
+        {% if badge %}
+        <a href="{{ url }}" title="{{ title }}" class="medal"><span class="badge{{ badge_type }}">&#9679;</span>&nbsp;{{ title }}</a>
+        {% else %}
+        <span class="post-type-{{ type }}"><a href="{{ url }}">{{ title }}</a></span>
+            {% if revision %}<span class="revision-summary">{{ summary }}</span>{% endif %}
+        {% endif %}
+        <div style="height:5px"></div>
+    </div>
+</div>

@@ -9,7 +9,7 @@ from django import template
 from django.utils.encoding import smart_unicode
 from django.utils.safestring import mark_safe
 from forum.const import *
-from forum.models import Question, Answer, QuestionRevision, AnswerRevision
+from forum.models import Question, Answer, QuestionRevision, AnswerRevision, NodeRevision
 from django.utils.translation import ugettext as _
 from django.utils.translation import ungettext
 from django.utils import simplejson
@@ -131,7 +131,7 @@ def post_contributor_info(post,contributor_type='original_author'):
         post_type = 'question'
     elif isinstance(post,Answer):
         post_type = 'answer'
-    elif isinstance(post,AnswerRevision) or isinstance(post,QuestionRevision):
+    elif isinstance(post,(AnswerRevision, QuestionRevision, NodeRevision)):
         post_type = 'revision'
     return {
         'post':post,

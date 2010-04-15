@@ -43,10 +43,10 @@
 {% endblock %}
 {% block content %}
     <div id="mainbar-full">
-        {% include "user_info.html" %}
-        {% include "user_tabs.html" %}
+        {% include "users/info.html" %}
+        {% include "users/tabs.html" %}
         {% block usercontent %}
         {% endblock %}
-        {%comment%}{% include "user_footer.html" %}{%endcomment%}
+        {%comment%}{% include "users/footer.html" %}{%endcomment%}
 	</div>
 {% endblock %}<!-- end user.html -->

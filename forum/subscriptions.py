@@ -25,8 +25,10 @@ def apply_default_filters(queryset, excluded_id):
 def create_recipients_dict(usr_list):
     return [(s['username'], s['email'], {'username': s['username']}) for s in usr_list]
 
-def question_posted(sender, instance, **kwargs):
-    question = instance.content_object
+def question_posted(instance, created, **kwargs):
+    if not created: return
+
+    question = instance
 
     subscribers = User.objects.values('email', 'username').filter(
             Q(subscription_settings__enable_notifications=True, subscription_settings__new_question='i') |
@@ -55,11 +57,13 @@ def question_posted(sender, instance, **kwargs):
     for user in new_subscribers:
         create_subscription_if_not_exists(question, user)
 
-activity_record.connect(question_posted, sender=const.TYPE_ACTIVITY_ASK_QUESTION, weak=False)
+#post_save.connect(question_posted, sender=Question)
 
 
-def answer_posted(sender, instance, **kwargs):
-    answer = instance.content_object
+def answer_posted(instance, created, **kwargs):
+    if not created: return
+
+    answer = instance
     question = answer.question
 
     subscribers = question.subscribers.values('email', 'username').filter(
@@ -78,7 +82,7 @@ def answer_posted(sender, instance, **kwargs):
     if answer.author.subscription_settings.questions_answered:
         create_subscription_if_not_exists(question, answer.author)
 
-activity_record.connect(answer_posted, sender=const.TYPE_ACTIVITY_ANSWER, weak=False)
+post_save.connect(answer_posted, sender=Answer)
 
 
 def comment_posted(sender, instance, **kwargs):

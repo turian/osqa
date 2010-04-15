@@ -126,27 +126,16 @@ class AskForm(forms.Form):
     tags   = TagNamesField()
     wiki = WikiField()
 
-    openid = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 40, 'class':'openid-input'}))
-    user   = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 35}))
-    email  = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 35}))
 
 class AnswerForm(forms.Form):
     text   = EditorField()
     wiki   = WikiField()
-    openid = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 40, 'class':'openid-input'}))
-    user   = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 35}))
-    email  = forms.CharField(required=False, max_length=255, widget=forms.TextInput(attrs={'size' : 35}))
-    email_notify = EmailNotifyField()
-    def __init__(self, question, user, *args, **kwargs):
+
+    def __init__(self, question, *args, **kwargs):
         super(AnswerForm, self).__init__(*args, **kwargs)
-        self.fields['email_notify'].widget.attrs['id'] = 'question-subscribe-updates';
+
         if question.wiki and settings.WIKI_ON:
             self.fields['wiki'].initial = True
-        if user.is_authenticated():
-            if user in question.followed_by.all():
-                self.fields['email_notify'].initial = True
-                return
-        self.fields['email_notify'].initial = False
 
 
 class CloseForm(forms.Form):
@@ -165,15 +154,17 @@ class RevisionForm(forms.Form):
     """
     revision = forms.ChoiceField(widget=forms.Select(attrs={'style' : 'width:520px'}))
 
-    def __init__(self, post, latest_revision, *args, **kwargs):
+    def __init__(self, post, *args, **kwargs):
         super(RevisionForm, self).__init__(*args, **kwargs)
+
         revisions = post.revisions.all().values_list(
             'revision', 'author__username', 'revised_at', 'summary')
         date_format = '%c'
         self.fields['revision'].choices = [
             (r[0], u'%s - %s (%s) %s' % (r[0], r[1], r[2].strftime(date_format), r[3]))
             for r in revisions]
-        self.fields['revision'].initial = latest_revision.revision
+
+        self.fields['revision'].initial = post.active_revision.revision
 
 class EditQuestionForm(forms.Form):
     title  = TitleField()
@@ -181,11 +172,16 @@ class EditQuestionForm(forms.Form):
     tags   = TagNamesField()
     summary = SummaryField()
 
-    def __init__(self, question, revision, *args, **kwargs):
+    def __init__(self, question, revision=None, *args, **kwargs):
         super(EditQuestionForm, self).__init__(*args, **kwargs)
+
+        if revision is None:
+            revision = question.active_revision
+
         self.fields['title'].initial = revision.title
-        self.fields['text'].initial = revision.text
+        self.fields['text'].initial = revision.body
         self.fields['tags'].initial = revision.tagnames
+            
         # Once wiki mode is enabled, it can't be disabled
         if not question.wiki:
             self.fields['wiki'] = WikiField()
@@ -194,9 +190,13 @@ class EditAnswerForm(forms.Form):
     text = EditorField()
     summary = SummaryField()
 
-    def __init__(self, answer, revision, *args, **kwargs):
+    def __init__(self, answer, revision=None, *args, **kwargs):
         super(EditAnswerForm, self).__init__(*args, **kwargs)
-        self.fields['text'].initial = revision.text
+
+        if revision is None:
+            revision = answer.active_revision
+
+        self.fields['text'].initial = revision.body
 
 class EditUserForm(forms.Form):
     email = forms.EmailField(label=u'Email', help_text=_('this email does not have to be linked to gravatar'), required=True, max_length=255, widget=forms.TextInput(attrs={'size' : 35}))

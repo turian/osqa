@@ -15,22 +15,10 @@ from django.utils import simplejson
 from django.core.urlresolvers import reverse
 from forum.forms import *
 from forum.utils.html import sanitize_html
-from forum.authentication import user_updated 
-import time
-from django.contrib.contenttypes.models import ContentType
+from forum.authentication import user_updated
+import decorators
 
-question_type = ContentType.objects.get_for_model(Question)
-answer_type = ContentType.objects.get_for_model(Answer)
-comment_type = ContentType.objects.get_for_model(Comment)
-question_revision_type = ContentType.objects.get_for_model(QuestionRevision)
-answer_revision_type = ContentType.objects.get_for_model(AnswerRevision)
-repute_type = ContentType.objects.get_for_model(Repute)
-question_type_id = question_type.id
-answer_type_id = answer_type.id
-comment_type_id = comment_type.id
-question_revision_type_id = question_revision_type.id
-answer_revision_type_id = answer_revision_type.id
-repute_type_id = repute_type.id
+import time
 
 USERS_PAGE_SIZE = 35# refactor - move to some constants file
 
@@ -64,7 +52,7 @@ def users(request):
     except (EmptyPage, InvalidPage):
         users = objects_list.page(objects_list.num_pages)
 
-    return render_to_response('users.html', {
+    return render_to_response('users/users.html', {
                                 "users" : users,
                                 "suser" : suser,
                                 "keywords" : suser,
@@ -139,23 +127,38 @@ def edit_user(request, id):
             return HttpResponseRedirect(user.get_profile_url())
     else:
         form = EditUserForm(user)
-    return render_to_response('user_edit.html', {
+    return render_to_response('users/edit.html', {
                                                 'form' : form,
                                                 'gravatar_faq_url' : reverse('faq') + '#gravatar',
                                     }, context_instance=RequestContext(request))
 
-def user_stats(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
 
-    questions = user.questions.filter(deleted=False).order_by('-added_at')
-    answers = user.answers.filter(deleted=False).order_by('-added_at')
+
+def user_view(template, tab_name, tab_description, page_title):
+    def decorator(fn):
+        def decorated(request, id, slug=None):
+            context = fn(request, get_object_or_404(User, id=id))
+            context.update({
+                "tab_name" : tab_name,
+                "tab_description" : tab_description,
+                "page_title" : page_title,
+            })
+            return render_to_response(template, context, context_instance=RequestContext(request))
+        return decorated
+    return decorator
+
+
+@user_view('users/stats.html', 'stats', _('user profile'), _('user profile overview'))
+def user_stats(request, user):
+    questions = Question.objects.filter(author=user, deleted=False).order_by('-added_at')
+    answers = Answer.objects.filter(author=user, deleted=False).order_by('-added_at')
 
     up_votes = user.get_up_vote_count()
     down_votes = user.get_down_vote_count()
     votes_today = user.get_vote_count_today()
     votes_total = int(settings.MAX_VOTES_PER_DAY)
 
-    user_tags = Tag.objects.filter(Q(questions__author=user) | Q(questions__answers__author=user)) \
+    user_tags = Tag.objects.filter(Q(nodes__author=user) | Q(nodes__children__author=user)) \
         .annotate(user_tag_usage_count=Count('name')).order_by('-user_tag_usage_count')
 
     awards = Badge.objects.filter(award_badge__user=user).annotate(count=Count('name')).order_by('-count')
@@ -165,499 +168,39 @@ def user_stats(request, user_id, user_view):
     else:
         moderate_user_form = None
 
-    return render_to_response(user_view.template_file,{
-                                'moderate_user_form': moderate_user_form,
-                                "tab_name" : user_view.id,
-                                "tab_description" : user_view.tab_description,
-                                "page_title" : user_view.page_title,
-                                "view_user" : user,
-                                "questions" : questions,
-                                "answers" : answers,
-                                "up_votes" : up_votes,
-                                "down_votes" : down_votes,
-                                "total_votes": up_votes + down_votes,
-                                "votes_today_left": votes_total-votes_today,
-                                "votes_total_per_day": votes_total,
-                                "user_tags" : user_tags[:50],
-                                "awards": awards,
-                                "total_awards" : awards.count(),
-                            }, context_instance=RequestContext(request))
+    return {'moderate_user_form': moderate_user_form,
+            "view_user" : user,
+            "questions" : questions,
+            "answers" : answers,
+            "up_votes" : up_votes,
+            "down_votes" : down_votes,
+            "total_votes": up_votes + down_votes,
+            "votes_today_left": votes_total-votes_today,
+            "votes_total_per_day": votes_total,
+            "user_tags" : user_tags[:50],
+            "awards": awards,
+            "total_awards" : awards.count(),
+        }
 
-def user_recent(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
-    def get_type_name(type_id):
-        for item in TYPE_ACTIVITY:
-            if type_id in item:
-                return item[1]
+@user_view('users/recent.html', 'recent', _('recent user activity'), _('profile - recent activity'))
+def user_recent(request, user):
+    activities = Activity.objects.filter(activity_type__in=(TYPE_ACTIVITY_PRIZE,
+            TYPE_ACTIVITY_ASK_QUESTION, TYPE_ACTIVITY_ANSWER,
+            TYPE_ACTIVITY_COMMENT_QUESTION, TYPE_ACTIVITY_COMMENT_ANSWER,
+            TYPE_ACTIVITY_MARK_ANSWER), user=user).order_by('-active_at')[:USERS_PAGE_SIZE]
 
-    class Event:
-        def __init__(self, time, type, title, summary, answer_id, question_id):
-            self.time = time
-            self.type = get_type_name(type)
-            self.type_id = type
-            self.title = title
-            self.summary = summary
-            slug_title = slugify(title)
-            self.title_link = reverse('question', kwargs={'id':question_id, 'slug':slug_title})
-            if int(answer_id) > 0:
-                self.title_link += '#%s' % answer_id
-
-    class AwardEvent:
-        def __init__(self, time, type, id):
-            self.time = time
-            self.type = get_type_name(type)
-            self.type_id = type
-            self.badge = get_object_or_404(Badge, id=id)
-
-    activities = []
-    # ask questions
-    questions = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'active_at' : 'activity.active_at',
-            'activity_type' : 'activity.activity_type'
-            },
-        tables=['activity', 'question'],
-        where=['activity.content_type_id = %s AND activity.object_id = ' +
-            'question.id AND NOT question.deleted AND activity.user_id = %s AND activity.activity_type = %s'],
-        params=[question_type_id, user_id, TYPE_ACTIVITY_ASK_QUESTION],
-        order_by=['-activity.active_at']
-    ).values(
-            'title',
-            'question_id',
-            'active_at',
-            'activity_type'
-            )
-    if len(questions) > 0:
-        questions = [(Event(q['active_at'], q['activity_type'], q['title'], '', '0', \
-                      q['question_id'])) for q in questions]
-        activities.extend(questions)
-
-    # answers
-    answers = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'active_at' : 'activity.active_at',
-            'activity_type' : 'activity.activity_type'
-            },
-        tables=['activity', 'answer', 'question'],
-        where=['activity.content_type_id = %s AND activity.object_id = answer.id AND ' + 
-            'answer.question_id=question.id AND NOT answer.deleted AND activity.user_id=%s AND '+
-            'activity.activity_type=%s AND NOT question.deleted'],
-        params=[answer_type_id, user_id, TYPE_ACTIVITY_ANSWER],
-        order_by=['-activity.active_at']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'active_at',
-            'activity_type'
-            )
-    if len(answers) > 0:
-        answers = [(Event(q['active_at'], q['activity_type'], q['title'], '', q['answer_id'], \
-                    q['question_id'])) for q in answers]
-        activities.extend(answers)
-
-    # question comments
-    comments = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'comment.object_id',
-            'added_at' : 'comment.added_at',
-            'activity_type' : 'activity.activity_type'
-            },
-        tables=['activity', 'question', 'comment'],
-
-        where=['activity.content_type_id = %s AND activity.object_id = comment.id AND '+
-            'activity.user_id = comment.user_id AND comment.object_id=question.id AND '+
-            'comment.content_type_id=%s AND activity.user_id = %s AND activity.activity_type=%s AND ' +
-            'NOT question.deleted'],
-        params=[comment_type_id, question_type_id, user_id, TYPE_ACTIVITY_COMMENT_QUESTION],
-        order_by=['-comment.added_at']
-    ).values(
-            'title',
-            'question_id',
-            'added_at',
-            'activity_type'
-            )
-
-    if len(comments) > 0:
-        comments = [(Event(q['added_at'], q['activity_type'], q['title'], '', '0', \
-                     q['question_id'])) for q in comments]
-        activities.extend(comments)
-
-    # answer comments
-    comments = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'added_at' : 'comment.added_at',
-            'activity_type' : 'activity.activity_type'
-            },
-        tables=['activity', 'question', 'answer', 'comment'],
-
-        where=['activity.content_type_id = %s AND activity.object_id = comment.id AND '+
-            'activity.user_id = comment.user_id AND comment.object_id=answer.id AND '+
-            'comment.content_type_id=%s AND question.id = answer.question_id AND '+
-            'activity.user_id = %s AND activity.activity_type=%s AND '+
-            'NOT answer.deleted AND NOT question.deleted'],
-        params=[comment_type_id, answer_type_id, user_id, TYPE_ACTIVITY_COMMENT_ANSWER],
-        order_by=['-comment.added_at']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'added_at',
-            'activity_type'
-            )
-
-    if len(comments) > 0:
-        comments = [(Event(q['added_at'], q['activity_type'], q['title'], '', q['answer_id'], \
-                     q['question_id'])) for q in comments]
-        activities.extend(comments)
-
-    # question revisions
-    revisions = Activity.objects.extra(
-        select={
-            'title' : 'question_revision.title',
-            'question_id' : 'question_revision.question_id',
-            'added_at' : 'activity.active_at',
-            'activity_type' : 'activity.activity_type',
-            'summary' : 'question_revision.summary'
-            },
-        tables=['activity', 'question_revision', 'question'],
-        where=['activity.content_type_id = %s AND activity.object_id = question_revision.id AND '+
-            'question_revision.id=question.id AND NOT question.deleted AND '+
-            'activity.user_id = question_revision.author_id AND activity.user_id = %s AND '+
-            'activity.activity_type=%s'],
-        params=[question_revision_type_id, user_id, TYPE_ACTIVITY_UPDATE_QUESTION],
-        order_by=['-activity.active_at']
-    ).values(
-            'title',
-            'question_id',
-            'added_at',
-            'activity_type',
-            'summary'
-            )
-
-    if len(revisions) > 0:
-        revisions = [(Event(q['added_at'], q['activity_type'], q['title'], q['summary'], '0', \
-                      q['question_id'])) for q in revisions]
-        activities.extend(revisions)
-
-    # answer revisions
-    revisions = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'added_at' : 'activity.active_at',
-            'activity_type' : 'activity.activity_type',
-            'summary' : 'answer_revision.summary'
-            },
-        tables=['activity', 'answer_revision', 'question', 'answer'],
-
-        where=['activity.content_type_id = %s AND activity.object_id = answer_revision.id AND '+
-            'activity.user_id = answer_revision.author_id AND activity.user_id = %s AND '+
-            'answer_revision.answer_id=answer.id AND answer.question_id = question.id AND '+
-            'NOT question.deleted AND NOT answer.deleted AND '+
-            'activity.activity_type=%s'],
-        params=[answer_revision_type_id, user_id, TYPE_ACTIVITY_UPDATE_ANSWER],
-        order_by=['-activity.active_at']
-    ).values(
-            'title',
-            'question_id',
-            'added_at',
-            'answer_id',
-            'activity_type',
-            'summary'
-            )
-
-    if len(revisions) > 0:
-        revisions = [(Event(q['added_at'], q['activity_type'], q['title'], q['summary'], \
-                      q['answer_id'], q['question_id'])) for q in revisions]
-        activities.extend(revisions)
-
-    # accepted answers
-    accept_answers = Activity.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'added_at' : 'activity.active_at',
-            'activity_type' : 'activity.activity_type',
-            },
-        tables=['activity', 'answer', 'question'],
-        where=['activity.content_type_id = %s AND activity.object_id = answer.id AND '+
-            'activity.user_id = question.author_id AND activity.user_id = %s AND '+
-            'NOT answer.deleted AND NOT question.deleted AND '+
-            'answer.question_id=question.id AND activity.activity_type=%s'],
-        params=[answer_type_id, user_id, TYPE_ACTIVITY_MARK_ANSWER],
-        order_by=['-activity.active_at']
-    ).values(
-            'title',
-            'question_id',
-            'added_at',
-            'activity_type',
-            )
-    if len(accept_answers) > 0:
-        accept_answers = [(Event(q['added_at'], q['activity_type'], q['title'], '', '0', \
-            q['question_id'])) for q in accept_answers]
-        activities.extend(accept_answers)
-    #award history
-    awards = Activity.objects.extra(
-        select={
-            'badge_id' : 'badge.id',
-            'awarded_at': 'award.awarded_at',
-            'activity_type' : 'activity.activity_type'
-            },
-        tables=['activity', 'award', 'badge'],
-        where=['activity.user_id = award.user_id AND activity.user_id = %s AND '+
-            'award.badge_id=badge.id AND activity.object_id=award.id AND activity.activity_type=%s'],
-        params=[user_id, TYPE_ACTIVITY_PRIZE],
-        order_by=['-activity.active_at']
-    ).values(
-            'badge_id',
-            'awarded_at',
-            'activity_type'
-            )
-    if len(awards) > 0:
-        awards = [(AwardEvent(q['awarded_at'], q['activity_type'], q['badge_id'])) for q in awards]
-        activities.extend(awards)
-
-    activities.sort(lambda x,y: cmp(y.time, x.time))
-
-    return render_to_response(user_view.template_file,{
-                                    "tab_name" : user_view.id,
-                                    "tab_description" : user_view.tab_description,
-                                    "page_title" : user_view.page_title,
-                                    "view_user" : user,
-                                    "activities" : activities[:user_view.data_size]
-                                }, context_instance=RequestContext(request))
-
-def user_responses(request, user_id, user_view):
-    """
-    We list answers for question, comments, and answer accepted by others for this user.
-    """
-    class Response:
-        def __init__(self, type, title, question_id, answer_id, time, username, user_id, content):
-            self.type = type
-            self.title = title
-            self.titlelink = reverse('question', kwargs={'id': question_id, 'slug': slugify(title)}) +u'#%s' % answer_id
-            self.time = time
-            self.userlink = reverse('users') + u'%s/%s/' % (user_id, username)
-            self.username = username
-            self.content = u'%s ...' % strip_tags(content)[:300]
-
-        def __unicode__(self):
-            return u'%s %s' % (self.type, self.titlelink)
-
-    user = get_object_or_404(User, id=user_id)
-    responses = []
-    answers = Answer.objects.extra(
-                                    select={
-                                        'title' : 'question.title',
-                                        'question_id' : 'question.id',
-                                        'answer_id' : 'answer.id',
-                                        'added_at' : 'answer.added_at',
-                                        'html' : 'answer.html',
-                                        'username' : 'auth_user.username',
-                                        'user_id' : 'auth_user.id'
-                                        },
-                                    select_params=[user_id],
-                                    tables=['answer', 'question', 'auth_user'],
-                                    where=['answer.question_id = question.id AND NOT answer.deleted AND NOT question.deleted AND '+
-                                        'question.author_id = %s AND answer.author_id <> %s AND answer.author_id=auth_user.id'],
-                                    params=[user_id, user_id],
-                                    order_by=['-answer.id']
-                                ).values(
-                                        'title',
-                                        'question_id',
-                                        'answer_id',
-                                        'added_at',
-                                        'html',
-                                        'username',
-                                        'user_id'
-                                        )
-    if len(answers) > 0:
-        answers = [(Response(TYPE_RESPONSE['QUESTION_ANSWERED'], a['title'], a['question_id'],
-        a['answer_id'], a['added_at'], a['username'], a['user_id'], a['html'])) for a in answers]
-        responses.extend(answers)
+    return {"view_user" : user, "activities" : activities}
 
 
-    # question comments
-    comments = Comment.active.extra(
-                                select={
-                                    'title' : 'question.title',
-                                    'question_id' : 'comment.object_id',
-                                    'added_at' : 'comment.added_at',
-                                    'comment' : 'comment.comment',
-                                    'username' : 'auth_user.username',
-                                    'user_id' : 'auth_user.id'
-                                    },
-                                tables=['question', 'auth_user', 'comment'],
-                                where=['NOT question.deleted AND question.author_id = %s AND comment.object_id=question.id AND '+
-                                    'comment.content_type_id=%s AND comment.user_id <> %s AND comment.user_id = auth_user.id'],
-                                params=[user_id, question_type_id, user_id],
-                                order_by=['-comment.added_at']
-                            ).values(
-                                    'title',
-                                    'question_id',
-                                    'added_at',
-                                    'comment',
-                                    'username',
-                                    'user_id'
-                                    )
+@user_view('users/votes.html', 'votes', _('user vote record'), _('profile - votes'))
+def user_votes(request, user):
+    votes = user.votes.exclude(node__deleted=True).order_by('-voted_at')[:USERS_PAGE_SIZE]
 
-    if len(comments) > 0:
-        comments = [(Response(TYPE_RESPONSE['QUESTION_COMMENTED'], c['title'], c['question_id'],
-            '', c['added_at'], c['username'], c['user_id'], c['comment'])) for c in comments]
-        responses.extend(comments)
+    return {"view_user" : user, "votes" : votes}
 
-    # answer comments
-    comments = Comment.active.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'added_at' : 'comment.added_at',
-            'comment' : 'comment.comment',
-            'username' : 'auth_user.username',
-            'user_id' : 'auth_user.id'
-            },
-        tables=['answer', 'auth_user', 'comment', 'question'],
-        where=['NOT answer.deleted AND answer.author_id = %s AND comment.object_id=answer.id AND '+
-            'comment.content_type_id=%s AND comment.user_id <> %s AND comment.user_id = auth_user.id '+
-            'AND question.id = answer.question_id'],
-        params=[user_id, answer_type_id, user_id],
-        order_by=['-comment.added_at']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'added_at',
-            'comment',
-            'username',
-            'user_id'
-            )
 
-    if len(comments) > 0:
-        comments = [(Response(TYPE_RESPONSE['ANSWER_COMMENTED'], c['title'], c['question_id'],
-        c['answer_id'], c['added_at'], c['username'], c['user_id'], c['comment'])) for c in comments]
-        responses.extend(comments)
-
-    # answer has been accepted
-    answers = Answer.objects.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'added_at' : 'answer.accepted_at',
-            'html' : 'answer.html',
-            'username' : 'auth_user.username',
-            'user_id' : 'auth_user.id'
-            },
-        select_params=[user_id],
-        tables=['answer', 'question', 'auth_user'],
-        where=['answer.question_id = question.id AND NOT answer.deleted AND NOT question.deleted AND '+
-            'answer.author_id = %s AND answer.accepted=True AND question.author_id=auth_user.id'],
-        params=[user_id],
-        order_by=['-answer.id']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'added_at',
-            'html',
-            'username',
-            'user_id'
-            )
-    if len(answers) > 0:
-        answers = [(Response(TYPE_RESPONSE['ANSWER_ACCEPTED'], a['title'], a['question_id'],
-            a['answer_id'], a['added_at'], a['username'], a['user_id'], a['html'])) for a in answers]
-        responses.extend(answers)
-
-    # sort posts by time
-    responses.sort(lambda x,y: cmp(y.time, x.time))
-
-    return render_to_response(user_view.template_file,{
-        "tab_name" : user_view.id,
-        "tab_description" : user_view.tab_description,
-        "page_title" : user_view.page_title,
-        "view_user" : user,
-        "responses" : responses[:user_view.data_size],
-
-    }, context_instance=RequestContext(request))
-
-def user_votes(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
-    if not request.user == user:
-        raise Http404
-    votes = []
-    question_votes = Vote.active.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 0,
-            'voted_at' : 'vote.voted_at',
-            'vote' : 'vote',
-            },
-        select_params=[user_id],
-        tables=['vote', 'question', 'auth_user'],
-        where=['vote.content_type_id = %s AND vote.user_id = %s AND vote.object_id = question.id '+
-            'AND vote.user_id=auth_user.id'],
-        params=[question_type_id, user_id],
-        order_by=['-vote.id']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'voted_at',
-            'vote',
-            )
-    if(len(question_votes) > 0):
-        votes.extend(question_votes)
-
-    answer_votes = Vote.active.extra(
-        select={
-            'title' : 'question.title',
-            'question_id' : 'question.id',
-            'answer_id' : 'answer.id',
-            'voted_at' : 'vote.voted_at',
-            'vote' : 'vote',
-            },
-        select_params=[user_id],
-        tables=['vote', 'answer', 'question', 'auth_user'],
-        where=['vote.content_type_id = %s AND vote.user_id = %s AND vote.object_id = answer.id '+
-            'AND answer.question_id = question.id AND vote.user_id=auth_user.id'],
-        params=[answer_type_id, user_id],
-        order_by=['-vote.id']
-    ).values(
-            'title',
-            'question_id',
-            'answer_id',
-            'voted_at',
-            'vote',
-            )
-
-    if(len(answer_votes) > 0):
-        votes.extend(answer_votes)
-    votes.sort(lambda x,y: cmp(y['voted_at'], x['voted_at']))
-    return render_to_response(user_view.template_file,{
-        "tab_name" : user_view.id,
-        "tab_description" : user_view.tab_description,
-        "page_title" : user_view.page_title,
-        "view_user" : user,
-        "votes" : votes[:user_view.data_size]
-
-    }, context_instance=RequestContext(request))
-
-def user_reputation(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
-
+@user_view('users/reputation.html', 'reputation', _('user reputation in the community'), _('profile - user reputation'))
+def user_reputation(request, user):
     reputation = user.reputes.order_by('-reputed_at')
 
     graph_data = simplejson.dumps([
@@ -665,68 +208,16 @@ def user_reputation(request, user_id, user_view):
             for rep in reputation
     ])
 
-    return render_to_response(user_view.template_file, {
-                              "tab_name": user_view.id,
-                              "tab_description": user_view.tab_description,
-                              "page_title": user_view.page_title,
-                              "view_user": user,
-                              "reputation": reputation,
-                              "graph_data": graph_data
-                              }, context_instance=RequestContext(request))
+    return {"view_user": user, "reputation": reputation, "graph_data": graph_data}
 
-def user_favorites(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
-    questions = Question.objects.extra(
-        select={
-            'vote_count' : 'question.vote_up_count + question.vote_down_count',
-            'favorited_myself' : 'SELECT count(*) FROM favorite_question f WHERE f.user_id = %s '+
-                'AND f.question_id = question.id',
-            'la_user_id' : 'auth_user.id',
-            'la_username' : 'auth_user.username',
-            'la_user_gold' : 'forum_user.gold',
-            'la_user_silver' : 'forum_user.silver',
-            'la_user_bronze' : 'forum_user.bronze',
-            'la_user_reputation' : 'forum_user.reputation'
-            },
-        select_params=[user_id],
-        tables=['question', 'auth_user', 'favorite_question', 'forum_user'],
-        where=['NOT question.deleted AND question.last_activity_by_id = auth_user.id '+
-            'AND favorite_question.question_id = question.id AND favorite_question.user_id = %s AND forum_user.user_ptr_id = auth_user.id'],
-        params=[user_id],
-        order_by=['-vote_count', '-question.id']
-    ).values('vote_count',
-             'favorited_myself',
-             'id',
-             'title',
-             'author_id',
-             'added_at',
-             'answer_accepted',
-             'answer_count',
-             'comment_count',
-             'view_count',
-             'favourite_count',
-             'summary',
-             'tagnames',
-             'vote_up_count',
-             'vote_down_count',
-             'last_activity_at',
-             'la_user_id',
-             'la_username',
-             'la_user_gold',
-             'la_user_silver',
-             'la_user_bronze',
-             'la_user_reputation')
-    return render_to_response(user_view.template_file,{
-        "tab_name" : user_view.id,
-        "tab_description" : user_view.tab_description,
-        "page_title" : user_view.page_title,
-        "questions" : questions[:user_view.data_size],
-        "view_user" : user
-    }, context_instance=RequestContext(request))
+@user_view('users/questions.html', 'favorites', _('favorite questions'),  _('profile - favorite questions'))
+def user_favorites(request, user):
+    questions = user.favorite_questions.filter(deleted=False)
 
-def user_subscription_settings(request, user_id, user_view):
-    user = get_object_or_404(User, id=user_id)
+    return {"questions" : questions, "view_user" : user}
 
+@user_view('users/subscriptions.html', 'subscriptions', _('subscription settings'), _('profile - subscriptions'))
+def user_subscriptions(request, user):
     if request.method == 'POST':
         form = SubscriptionSettingsForm(request.POST)
 
@@ -750,108 +241,10 @@ def user_subscription_settings(request, user_id, user_view):
 
     notificatons_on = user.subscription_settings.enable_notifications
 
-    return render_to_response(user_view.template_file,{
-        'tab_name':user_view.id,
-        'tab_description':user_view.tab_description,
-        'page_title':user_view.page_title,
-        'view_user':user,
-        'notificatons_on': notificatons_on,
-        'form':form,
-    }, context_instance=RequestContext(request))
-
-class UserView:
-    def __init__(self, id, tab_title, tab_description, page_title, view_func, template_file, data_size=0):
-        self.id = id
-        self.tab_title = tab_title
-        self.tab_description = tab_description
-        self.page_title = page_title
-        self.view_func = view_func 
-        self.template_file = template_file
-        self.data_size = data_size
-        
-USER_TEMPLATE_VIEWS = (
-    UserView(
-        id = 'stats',
-        tab_title = _('overview'),
-        tab_description = _('user profile'),
-        page_title = _('user profile overview'),
-        view_func = user_stats,
-        template_file = 'user_stats.html'
-    ),
-    UserView(
-        id = 'recent',
-        tab_title = _('recent activity'),
-        tab_description = _('recent user activity'),
-        page_title = _('profile - recent activity'),
-        view_func = user_recent,
-        template_file = 'user_recent.html',
-        data_size = 50
-    ),
-    UserView(
-        id = 'responses',
-        tab_title = _('responses'),
-        tab_description = _('comments and answers to others questions'),
-        page_title = _('profile - responses'),
-        view_func = user_responses,
-        template_file = 'user_responses.html',
-        data_size = 50
-    ),
-    UserView(
-        id = 'reputation',
-        tab_title = _('reputation'),
-        tab_description = _('user reputation in the community'),
-        page_title = _('profile - user reputation'),
-        view_func = user_reputation,
-        template_file = 'user_reputation.html'
-    ),
-    UserView(
-        id = 'favorites',
-        tab_title = _('favorite questions'),
-        tab_description = _('users favorite questions'),
-        page_title = _('profile - favorite questions'),
-        view_func = user_favorites,
-        template_file = 'user_favorites.html',
-        data_size = 50
-    ),
-    UserView(
-        id = 'votes',
-        tab_title = _('casted votes'),
-        tab_description = _('user vote record'),
-        page_title = _('profile - votes'),
-        view_func = user_votes,
-        template_file = 'user_votes.html',
-        data_size = 50
-    ),
-    UserView(
-        id = 'subscriptions',
-        tab_title = _('subscriptions'),
-        tab_description = _('subscription settings'),
-        page_title = _('profile - subscriptions'),
-        view_func = user_subscription_settings,
-        template_file = 'user_subscriptions.html'
-    )
-)
-
-def user(request, id, slug=None):
-    sort = request.GET.get('sort', 'stats')
-    user_view = dict((v.id, v) for v in USER_TEMPLATE_VIEWS).get(sort, USER_TEMPLATE_VIEWS[0])
-    from forum.views import users
-    func = user_view.view_func
-    return func(request, id, user_view)
+    return {'view_user':user, 'notificatons_on': notificatons_on, 'form':form}
 
 @login_required
 def account_settings(request):
-    """
-    index pages to changes some basic account settings :
-     - change password
-     - change email
-     - associate a new openid
-     - delete account
-
-    url : /
-
-    template : authopenid/settings.html
-    """
     logging.debug('')
     msg = request.GET.get('msg', '')
     is_openid = False

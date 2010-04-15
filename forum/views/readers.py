@@ -7,6 +7,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, Http404
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.template import RequestContext
+from django import template
 from django.utils.html import *
 from django.utils import simplejson
 from django.db.models import Q
@@ -20,7 +21,6 @@ from django.template.defaultfilters import slugify
 from django.utils.safestring import mark_safe
 
 from forum.utils.html import sanitize_html
-from markdown2 import Markdown
 from forum.utils.diff import textDiff as htmldiff
 from forum.forms import *
 from forum.models import *
@@ -40,8 +40,6 @@ DEFAULT_PAGE_SIZE = 60
 QUESTIONS_PAGE_SIZE = 30
 # used in answers
 ANSWERS_PAGE_SIZE = 10
-
-markdowner = Markdown(html4tags=True)
 
 #system to display main content
 def _get_tags_cache_json():#service routine used by views requiring tag list in the javascript space
@@ -192,11 +190,10 @@ def update_question_view_times(request, question):
         request.session['question_view_times'] = {}
 
     last_seen = request.session['question_view_times'].get(question.id,None)
-    updated_when, updated_who = question.get_last_update_info()
 
-    if not last_seen or last_seen < updated_when:
-        question.view_count = question.view_count + 1
+    if not last_seen or last_seen < question.last_activity_at:
         question_view.send(sender=update_question_view_times, instance=question, user=request.user)
+        request.session['question_view_times'][question.id] = datetime.datetime.now()
 
     request.session['question_view_times'][question.id] = datetime.datetime.now()
 
@@ -212,7 +209,7 @@ def question(request, id, slug):
     if question.deleted and not request.user.can_view_deleted_post(question):
         raise Http404
 
-    answer_form = AnswerForm(question,request.user)
+    answer_form = AnswerForm(question)
     answers = request.user.get_visible_answers(question)
 
     if answers is not None:
@@ -254,51 +251,35 @@ def question(request, id, slug):
         }, context_instance=RequestContext(request))
 
 
-QUESTION_REVISION_TEMPLATE = ('<h1>%(title)s</h1>\n'
-                              '<div class="text">%(html)s</div>\n'
-                              '<div class="tags">%(tags)s</div>')
-def question_revisions(request, id):
-    post = get_object_or_404(Question, id=id)
-    revisions = list(post.revisions.all())
-    revisions.reverse()
+REVISION_TEMPLATE = template.loader.get_template('node/revision.html')
+
+def revisions(request, id):
+    post = get_object_or_404(Node, id=id).leaf
+    revisions = list(post.revisions.order_by('revised_at'))
+
+    rev_ctx = []
+
     for i, revision in enumerate(revisions):
-        revision.html = QUESTION_REVISION_TEMPLATE % {
-            'title': revision.title,
-            'html': sanitize_html(markdowner.convert(revision.text)),
-            'tags': ' '.join(['<a class="post-tag">%s</a>' % tag
-                              for tag in revision.tagnames.split(' ')]),
-        }
+        rev_ctx.append(dict(inst=revision, html=REVISION_TEMPLATE.render(template.Context({
+                'title': revision.title,
+                'html': revision.html,
+                'tags': revision.tagname_list(),
+        }))))
+
         if i > 0:
-            revisions[i].diff = htmldiff(revisions[i-1].html, revision.html)
+            rev_ctx[i]['diff'] = mark_safe(htmldiff(rev_ctx[i-1]['html'], rev_ctx[i]['html']))
         else:
-            revisions[i].diff = QUESTION_REVISION_TEMPLATE % {
-                'title': revisions[0].title,
-                'html': sanitize_html(markdowner.convert(revisions[0].text)),
-                'tags': ' '.join(['<a class="post-tag">%s</a>' % tag
-                                 for tag in revisions[0].tagnames.split(' ')]),
-            }
-            revisions[i].summary = _('initial version') 
+            rev_ctx[i]['diff'] = mark_safe(rev_ctx[i]['html'])
+
+        if not (revision.summary):
+            rev_ctx[i]['summary'] = _('Revision n. %(rev_number)d') % {'rev_number': revision.revision}
+        else:
+            rev_ctx[i]['summary'] = revision.summary
+            
     return render_to_response('revisions_question.html', {
                               'post': post,
-                              'revisions': revisions,
+                              'revisions': rev_ctx,
                               }, context_instance=RequestContext(request))
 
-ANSWER_REVISION_TEMPLATE = ('<div class="text">%(html)s</div>')
-def answer_revisions(request, id):
-    post = get_object_or_404(Answer, id=id)
-    revisions = list(post.revisions.all())
-    revisions.reverse()
-    for i, revision in enumerate(revisions):
-        revision.html = ANSWER_REVISION_TEMPLATE % {
-            'html': sanitize_html(markdowner.convert(revision.text))
-        }
-        if i > 0:
-            revisions[i].diff = htmldiff(revisions[i-1].html, revision.html)
-        else:
-            revisions[i].diff = revisions[i].text
-            revisions[i].summary = _('initial version')
-    return render_to_response('revisions_answer.html', {
-                              'post': post,
-                              'revisions': revisions,
-                              }, context_instance=RequestContext(request))
+
 

@@ -62,8 +62,8 @@ class CannotDoubleActionException(Exception):
 
 
 @command
-def vote_post(request, post_type, id, vote_type):
-    post = get_object_or_404(post_type == "question" and Question or Answer, id=id)
+def vote_post(request, id, vote_type):
+    post = get_object_or_404(Node, id=id)
     vote_score = vote_type == 'up' and 1 or -1
     user = request.user
 
@@ -94,13 +94,13 @@ def vote_post(request, post_type, id, vote_type):
         vote_type = 'none'
     except ObjectDoesNotExist:
         #there is no vote yet
-        vote = Vote(user=user, content_object=post, vote=vote_score)
+        vote = Vote(user=user, node=post, vote=vote_score)
         vote.save()
 
     response = {
         'commands': {
-            'update_post_score': [post_type, id, vote.vote * (vote_type == 'none' and -1 or 1)],
-            'update_user_post_vote': [post_type, id, vote_type]
+            'update_post_score': [id, vote.vote * (vote_type == 'none' and -1 or 1)],
+            'update_user_post_vote': [id, vote_type]
         }
     }
 
@@ -218,8 +218,8 @@ def mark_favorite(request, id):
     }
 
 @command
-def comment(request, post_type, id):
-    post = get_object_or_404(post_type == "question" and Question or Answer, id=id)
+def comment(request, id):
+    post = get_object_or_404(Node, id=id)
     user = request.user
 
     if not user.is_authenticated():
@@ -237,7 +237,7 @@ def comment(request, post_type, id):
         if not user.can_comment(post):
             raise NotEnoughRepPointsException( _('comment'))
 
-        comment = Comment(user=user, content_object=post)
+        comment = Comment(user=user, node=post)
 
     comment_text = request.POST.get('comment', '').strip()
 
@@ -251,8 +251,7 @@ def comment(request, post_type, id):
         return {
             'commands': {
                 'insert_comment': [
-                    post_type, id,
-                    comment.id, comment_text, user.username, user.get_profile_url(), reverse('delete_comment', kwargs={'id': comment.id})
+                    id, comment.id, comment_text, user.username, user.get_profile_url(), reverse('delete_comment', kwargs={'id': comment.id})
                 ]
             }
         }
@@ -288,6 +287,8 @@ def accept_answer(request, id):
             accepted.unmark_accepted()
             commands['unmark_accepted'] = [accepted.id]
         except:
+            #import sys, traceback
+            #traceback.print_exc(file=sys.stdout)
             pass
 
         answer.mark_accepted(user)

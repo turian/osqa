@@ -33,7 +33,7 @@ def question_sort_tabs(sort_context):
 @register.inclusion_tag('question_list/related_tags.html')
 def question_list_related_tags(questions):
     if len(questions):
-        return {'tags': Tag.objects.filter(questions__id__in=[q.id for q in questions]).distinct()}
+        return {'tags': Tag.objects.filter(nodes__id__in=[q.id for q in questions]).distinct()}
     else:
         return {'tags': False}
 

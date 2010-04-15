@@ -1,7 +1,7 @@
 {% load extra_tags %}
 {% load i18n %}
 
-<div class="comments-container" id="comments-container-{{ post_type }}-{{ post.id }}">
+<div class="comments-container" id="comments-container-{{ post.id }}">
     {% for comment in comments %}
         <table class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-{{comment.id}}">
             <tr>
@@ -34,7 +34,7 @@
         </table>
     {% endfor %}
 </div>
-<div id="comment-tools-{{ post_type }}-{{ post.id }}" class="comment-tools">
+<div id="comment-tools-{{ post.id }}" class="comment-tools">
     <img src="/m/default/media/images/gray-up-arrow-h18px.png" />
     {% ifnotequal showing total %}
         <span class="comments-showing">
@@ -47,18 +47,18 @@
     {% endif %}
 </div>
 {% if can_comment %}
-<div id="comment-{{ post_type }}-{{ post.id }}-form-container" class="comment-form-container">
-    <form id="comment-{{ post_type }}-{{ post.id }}-form" method="post" action="{% url comment post_type=post_type,id=post.id %}">
+<div id="comment-{{ post.id }}-form-container" class="comment-form-container">
+    <form id="comment-{{ post.id }}-form" method="post" action="{% url comment id=post.id %}">
         <div class="comment-form-widgets-container">
             <textarea name="comment"></textarea>
             <input type="submit" value="{% trans " add comment" %}" />
         </div>
-        <span id="comment-{{ post_type }}-{{ post.id }}-chars-left" class="comment-chars-left">
+        <span id="comment-{{ post.id }}-chars-left" class="comment-chars-left">
             {% blocktrans %}
                 have <span class="comments-char-left-count">{{ max_length }}</span> characters left
             {% endblocktrans %}
         </span>
-        <script type="text/html" class="new-comment-skeleton" id="new-comment-skeleton-{{ post_type }}-{{ post.id }}">
+        <script type="text/html" class="new-comment-skeleton" id="new-comment-skeleton-{{ post.id }}">
             <table class="comment" id="comment-%ID%" style="display: none">
                 <tr>
                     <td rowspan="2" class="comment-score" id="comment-%ID%-score"></td>

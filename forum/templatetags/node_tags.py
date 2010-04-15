@@ -7,11 +7,10 @@ from django import template
 
 register = template.Library()
 
-@register.inclusion_tag('question/vote_buttons.html')
+@register.inclusion_tag('node/vote_buttons.html')
 def vote_buttons(post, user):
     context = {
         'post': post,
-        'post_type': (post.__class__ is Question) and 'question' or 'answer',
         'user_vote': 'none'
     }
 
@@ -24,7 +23,7 @@ def vote_buttons(post, user):
 
     return context
 
-@register.inclusion_tag('question/accept_button.html')    
+@register.inclusion_tag('node/accept_button.html')
 def accept_button(answer, user):
     return {
         'can_accept': user.is_authenticated() and user.can_accept_answer(answer),
@@ -32,7 +31,7 @@ def accept_button(answer, user):
         'user': user
     }
 
-@register.inclusion_tag('question/favorite_mark.html')
+@register.inclusion_tag('node/favorite_mark.html')
 def favorite_mark(question, user):
     try:
         FavoriteQuestion.objects.get(question=question, user=user)
@@ -47,7 +46,7 @@ def favorite_mark(question, user):
 def post_control(text, url, command=False, title=""):
     return {'text': text, 'url': url, 'command': command, 'title': title}
 
-@register.inclusion_tag('question/post_controls.html')
+@register.inclusion_tag('node/post_controls.html')
 def post_controls(post, user):
     controls = []
 
@@ -79,7 +78,7 @@ def post_controls(post, user):
 
     return {'controls': controls}
 
-@register.inclusion_tag('question/comments.html')
+@register.inclusion_tag('node/comments.html')
 def comments(post, user):
     all_comments = post.comments.filter(deleted=False).order_by('added_at')
 
@@ -115,7 +114,6 @@ def comments(post, user):
     return {
         'comments': comments,
         'post': post,
-        'post_type': (post.__class__ is Question) and 'question' or 'answer',
         'can_comment': user.can_comment(post),
         'max_length': 300,
         'showing': showing,

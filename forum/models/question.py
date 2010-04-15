@@ -1,51 +1,15 @@
 from base import *
 from tag import Tag
-
-class QuestionManager(CachedManager):
-    def create_new(self, title=None,author=None,added_at=None, wiki=False,tagnames=None,summary=None, text=None):
-
-        question = Question(
-            title            = title,
-            author           = author,
-            added_at         = added_at,
-            last_activity_at = added_at,
-            last_activity_by = author,
-            wiki             = wiki,
-            tagnames         = tagnames,
-            html             = text,
-            summary          = summary
-        )
-        if question.wiki:
-            question.last_edited_by = question.author
-            question.last_edited_at = added_at
-            question.wikified_at = added_at
-
-        question.save()
-
-        # create the first revision
-        QuestionRevision.objects.create(
-            question   = question,
-            revision   = 1,
-            title      = question.title,
-            author     = author,
-            revised_at = added_at,
-            tagnames   = question.tagnames,
-            summary    = CONST['default_version'],
-            text       = text
-        )
-        return question
+from django.utils.translation import ugettext as _
 
 question_view = django.dispatch.Signal(providing_args=['instance', 'user'])
 
-class Question(Content):
-    title    = models.CharField(max_length=300)
-    tags     = models.ManyToManyField(Tag, related_name='questions')
+class Question(QandA):
     answer_accepted = models.BooleanField(default=False)
     closed          = models.BooleanField(default=False)
     closed_by       = models.ForeignKey(User, null=True, blank=True, related_name='closed_questions')
     closed_at       = models.DateTimeField(null=True, blank=True)
     close_reason    = models.SmallIntegerField(choices=CLOSE_REASONS, null=True, blank=True)
-    followed_by     = models.ManyToManyField(User, related_name='followed_questions')
     subscribers     = models.ManyToManyField(User, related_name='subscriptions', through='QuestionSubscription')
 
     # Denormalised data
@@ -54,15 +18,21 @@ class Question(Content):
     favourite_count      = models.IntegerField(default=0)
     last_activity_at     = models.DateTimeField(default=datetime.datetime.now)
     last_activity_by     = models.ForeignKey(User, related_name='last_active_in_questions')
-    tagnames             = models.CharField(max_length=125)
-    summary              = models.CharField(max_length=180)
 
-    favorited_by         = models.ManyToManyField(User, through='FavoriteQuestion', related_name='favorite_questions') 
+    favorited_by         = models.ManyToManyField(User, through='FavoriteQuestion', related_name='favorite_questions')
 
-    objects = QuestionManager()
-
-    class Meta(Content.Meta):
+    class Meta(QandA.Meta):
         db_table = u'question'
+
+    @property
+    def headline(self):
+        if self.closed:
+            return _('[closed] ') + self.title
+
+        if self.deleted:
+            return _('[deleted] ') + self.title
+
+        return self.title
 
     def delete(self):
         super(Question, self).delete()
@@ -71,56 +41,14 @@ class Question(Content):
         except Exception:
             logging.debug('problem pinging google did you register you sitemap with google?')
 
-    def get_tag_list_if_changed(self):
-        dirty = self.get_dirty_fields()
+    def update_last_activity(self, user):
+        self.last_activity_by = user
+        self.last_activity_at = datetime.datetime.now()
+        self.save()
 
-        if 'tagnames' in dirty:
-            new_tags = self.tagname_list()
-
-            old_tags = dirty['tagnames']
-            if old_tags is None:
-                old_tags = []
-            else:
-                old_tags = [name for name in dirty['tagnames'].split(u' ')]
-
-            tag_list = []
-
-            for name in new_tags:
-                try:
-                    tag = Tag.objects.get(name=name)
-                except:
-                    tag = Tag.objects.create(name=name, created_by=self.last_edited_by or self.author)
-
-                tag_list.append(tag)
-
-                if not name in old_tags:
-                    tag.used_count = tag.used_count + 1
-                    if tag.deleted:
-                        tag.unmark_deleted()
-                    tag.save()
-
-            for name in [n for n in old_tags if not n in new_tags]:
-                tag = Tag.objects.get(name=name)
-                tag.used_count = tag.used_count - 1
-                if tag.used_count == 0:
-                    tag.mark_deleted(self.last_edited_by or self.author)
-                tag.save()
-
-            return tag_list
-
-        return None
-
-    def save(self, *args, **kwargs):
-        tags = self.get_tag_list_if_changed()
-        super(Question, self).save(*args, **kwargs)
-        if not tags is None: self.tags = tags
-
-    def tagname_list(self):
-        """Creates a list of Tag names from the ``tagnames`` attribute."""
-        return [name for name in self.tagnames.split(u' ')]
-
-    def tagname_meta_generator(self):
-        return u','.join([unicode(tag) for tag in self.tagname_list()])
+    def activate_revision(self, user, revision):
+        super(Question, self).activate_revision(user, revision)
+        self.update_last_activity(user)
 
     @models.permalink    
     def get_absolute_url(self):
@@ -149,19 +77,6 @@ class Question(Content):
     def get_latest_revision(self):
         return self.revisions.all()[0]
 
-    def get_last_update_info(self):
-        when, who = self.post_get_last_update_info()
-
-        answers = self.answers.all()
-        if len(answers) > 0:
-            for a in answers:
-                a_when, a_who = a.post_get_last_update_info()
-                if a_when > when:
-                    when = a_when
-                    who = a_who
-
-        return when, who
-
     def get_related_questions(self, count=10):
         cache_key = '%s.related_questions:%d:%d' % (settings.APP_URL, count, self.id)
         related_list = cache.get(cache_key)
@@ -183,7 +98,6 @@ def question_viewed(instance, **kwargs):
 question_view.connect(question_viewed)
 
 class FavoriteQuestion(models.Model):
-    """A favorite Question of a User."""
     question      = models.ForeignKey('Question')
     user          = models.ForeignKey(User, related_name='user_favorite_questions')
     added_at      = models.DateTimeField(default=datetime.datetime.now)
@@ -218,43 +132,8 @@ class QuestionSubscription(models.Model):
     class Meta:
         app_label = 'forum'
 
-class QuestionRevision(ContentRevision):
-    """A revision of a Question."""
-    question   = models.ForeignKey(Question, related_name='revisions')
-    title      = models.CharField(max_length=300)
-    tagnames   = models.CharField(max_length=125)
 
-    class Meta(ContentRevision.Meta):
-        db_table = u'question_revision'
-        ordering = ('-revision',)
-
-    def get_question_title(self):
-        return self.question.title
-
-    def get_absolute_url(self):
-        #print 'in QuestionRevision.get_absolute_url()'
-        return reverse('question_revisions', args=[self.question.id])
-
-    def save(self, *args, **kwargs):
-        """Looks up the next available revision number."""
-        if not self.revision:
-            self.revision = QuestionRevision.objects.filter(
-                question=self.question).values_list('revision',
-                                                    flat=True)[0] + 1
-        super(QuestionRevision, self).save(*args, **kwargs)
-
-    def __unicode__(self):
-        return u'revision %s of %s' % (self.revision, self.title)
-
-class AnonymousQuestion(AnonymousContent):
-    title = models.CharField(max_length=300)
-    tagnames = models.CharField(max_length=125)
-
-    def publish(self,user):
-        added_at = datetime.datetime.now()
-        Question.objects.create_new(title=self.title, author=user, added_at=added_at,
-                                wiki=self.wiki, tagnames=self.tagnames,
-                                summary=self.summary, text=self.text)
-        self.delete()
-
-from answer import Answer, AnswerManager
+class QuestionRevision(NodeRevision):
+    class Meta:
+        proxy = True
+        
