@@ -56,7 +56,7 @@ def _get_tags_cache_json():#service routine used by views requiring tag list in 
 
 @decorators.render('index.html')
 def index(request):
-    return question_list(request, Question.objects.all(), sort='latest', base_path=reverse('questions'))
+    return question_list(request, Question.objects.all(), sort='active', base_path=reverse('questions'))
 
 @decorators.render('questions.html', 'unanswered')
 def unanswered(request):
