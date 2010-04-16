@@ -107,7 +107,7 @@ def vote_post(request, id, vote_type):
     votes_left = int(settings.MAX_VOTES_PER_DAY) - user_vote_count_today + (vote_type == 'none' and -1 or 1)
 
     if int(settings.START_WARN_VOTES_LEFT) >= votes_left:
-        response['message'] = _("You have %(nvotes) %(tvotes) left today.") % \
+        response['message'] = _("You have %(nvotes)s %(tvotes)s left today.") % \
                     {'nvotes': votes_left, 'tvotes': ungettext('vote', 'votes', votes_left)}
 
     return response
