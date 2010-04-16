@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 
 from forum.models.user import activity_record
-from forum.models import Badge, Award, Activity
+from forum.models import Badge, Award, Activity, Node
 
 import logging
 
@@ -74,6 +74,14 @@ class PostCountableAbstractBadge(CountableAbstractBadge):
 
         super(PostCountableAbstractBadge, self).__init__(model, field, expected_value, handler)
 
+class NodeCountableAbstractBadge(CountableAbstractBadge):
+    def __init__(self, node_type, field, expected_value):
+
+        def handler(instance):
+            if instance.node_type == node_type:
+                self.award_badge(instance.author, instance)
+
+        super(NodeCountableAbstractBadge, self).__init__(Node, field, expected_value, handler)
 
 class ActivityAbstractBadge(AbstractBadge):
 

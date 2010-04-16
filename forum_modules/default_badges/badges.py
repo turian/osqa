@@ -4,8 +4,8 @@ from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 
 from forum.badges.base import PostCountableAbstractBadge, ActivityAbstractBadge, FirstActivityAbstractBadge, \
-        ActivityCountAbstractBadge, CountableAbstractBadge, AbstractBadge
-from forum.models import Question, Answer, Activity, Tag
+        ActivityCountAbstractBadge, CountableAbstractBadge, AbstractBadge, NodeCountableAbstractBadge
+from forum.models import Node, Question, Answer, Activity, Tag
 from forum.models.user import activity_record
 from forum import const
 
@@ -33,47 +33,47 @@ class FamousQuestionBadge(PostCountableAbstractBadge):
         super(FamousQuestionBadge, self).__init__(Question, 'view_count', settings.FAMOUS_QUESTION_VIEWS)
 
 
-class NiceAnswerBadge(PostCountableAbstractBadge):
+class NiceAnswerBadge(NodeCountableAbstractBadge):
     type = const.BRONZE_BADGE
     description = _('Answer voted up %s times') % str(settings.NICE_ANSWER_VOTES_UP)
 
     def __init__(self):
-        super(NiceAnswerBadge, self).__init__(Answer, 'vote_up_count', settings.NICE_ANSWER_VOTES_UP)
+        super(NiceAnswerBadge, self).__init__("answer", 'vote_up_count', settings.NICE_ANSWER_VOTES_UP)
 
-class NiceQuestionBadge(PostCountableAbstractBadge):
+class NiceQuestionBadge(NodeCountableAbstractBadge):
     type = const.BRONZE_BADGE
     description = _('Question voted up %s times') % str(settings.NICE_QUESTION_VOTES_UP)
 
     def __init__(self):
-        super(NiceQuestionBadge, self).__init__(Question, 'vote_up_count', settings.NICE_QUESTION_VOTES_UP)
+        super(NiceQuestionBadge, self).__init__("question", 'vote_up_count', settings.NICE_QUESTION_VOTES_UP)
 
-class GoodAnswerBadge(PostCountableAbstractBadge):
+class GoodAnswerBadge(NodeCountableAbstractBadge):
     type = const.SILVER_BADGE
     description = _('Answer voted up %s times') % str(settings.GOOD_ANSWER_VOTES_UP)
 
     def __init__(self):
-        super(GoodAnswerBadge, self).__init__(Answer, 'vote_up_count', settings.GOOD_ANSWER_VOTES_UP)
+        super(GoodAnswerBadge, self).__init__("answer", 'vote_up_count', settings.GOOD_ANSWER_VOTES_UP)
 
-class GoodQuestionBadge(PostCountableAbstractBadge):
+class GoodQuestionBadge(NodeCountableAbstractBadge):
     type = const.SILVER_BADGE
     description = _('Question voted up %s times') % str(settings.GOOD_QUESTION_VOTES_UP)
 
     def __init__(self):
-        super(GoodQuestionBadge, self).__init__(Question, 'vote_up_count', settings.GOOD_QUESTION_VOTES_UP)
+        super(GoodQuestionBadge, self).__init__("question", 'vote_up_count', settings.GOOD_QUESTION_VOTES_UP)
 
-class GreatAnswerBadge(PostCountableAbstractBadge):
+class GreatAnswerBadge(NodeCountableAbstractBadge):
     type = const.GOLD_BADGE
     description = _('Answer voted up %s times') % str(settings.GREAT_ANSWER_VOTES_UP)
 
     def __init__(self):
-        super(GreatAnswerBadge, self).__init__(Answer, 'vote_up_count', settings.GREAT_ANSWER_VOTES_UP)
+        super(GreatAnswerBadge, self).__init__("answer", 'vote_up_count', settings.GREAT_ANSWER_VOTES_UP)
 
-class GreatQuestionBadge(PostCountableAbstractBadge):
+class GreatQuestionBadge(NodeCountableAbstractBadge):
     type = const.GOLD_BADGE
     description = _('Question voted up %s times') % str(settings.GREAT_QUESTION_VOTES_UP)
 
     def __init__(self):
-        super(GreatQuestionBadge, self).__init__(Question, 'vote_up_count', settings.GREAT_QUESTION_VOTES_UP)
+        super(GreatQuestionBadge, self).__init__("question", 'vote_up_count', settings.GREAT_QUESTION_VOTES_UP)
 
 
 class FavoriteQuestionBadge(PostCountableAbstractBadge):
@@ -193,10 +193,10 @@ class SelfLearnerBadge(CountableAbstractBadge):
     def __init__(self):
 
         def handler(instance):
-            if instance.author_id == instance.question.author_id:
+            if instance.node_type == "answer" and instance.author_id == instance.question.author_id:
                 self.award_badge(instance.author, instance)
 
-        super(SelfLearnerBadge, self).__init__(Answer, 'vote_up_count', settings.SELF_LEARNER_UP_VOTES, handler)
+        super(SelfLearnerBadge, self).__init__(Node, 'vote_up_count', settings.SELF_LEARNER_UP_VOTES, handler)
 
 
 class StrunkAndWhiteBadge(ActivityCountAbstractBadge):
@@ -217,10 +217,10 @@ class StudentBadge(CountableAbstractBadge):
 
     def __init__(self):
         def handler(instance):
-            if is_user_first(instance):
+            if instance.node_type == "question" and is_user_first(instance):
                 self.award_badge(instance.author, instance)
 
-        super(StudentBadge, self).__init__(Question, 'vote_up_count', 1, handler)
+        super(StudentBadge, self).__init__(Node, 'vote_up_count', 1, handler)
 
 class TeacherBadge(CountableAbstractBadge):
     type = const.BRONZE_BADGE
@@ -228,19 +228,20 @@ class TeacherBadge(CountableAbstractBadge):
 
     def __init__(self):
         def handler(instance):
-            if is_user_first(instance):
+            if instance.node_type == "answer" and is_user_first(instance):
                 self.award_badge(instance.author, instance)
 
-        super(TeacherBadge, self).__init__(Answer, 'vote_up_count', 1, handler)
+        super(TeacherBadge, self).__init__(Node, 'vote_up_count', 1, handler)
 
 
 class AcceptedAndVotedAnswerAbstractBadge(AbstractBadge):
     def __init__(self, up_votes, handler):
         def wrapper(sender, instance, **kwargs):
-            if sender is Answer:
-                answer = instance
-                if not "vote_up_count" in answer.get_dirty_fields():
+            if sender is Node:
+                if not (instance.node_type == "answer" and "vote_up_count" in instance.get_dirty_fields()):
                     return
+
+                answer = instance.leaf
             else:
                 answer = instance.content_object
 
@@ -251,7 +252,7 @@ class AcceptedAndVotedAnswerAbstractBadge(AbstractBadge):
                 handler(answer)
 
         activity_record.connect(wrapper, sender=const.TYPE_ACTIVITY_MARK_ANSWER, weak=False)
-        post_save.connect(wrapper, sender=Answer, weak=False)
+        post_save.connect(wrapper, sender=Node, weak=False)
 
 
 class EnlightenedBadge(AcceptedAndVotedAnswerAbstractBadge):
@@ -283,10 +284,10 @@ class NecromancerBadge(CountableAbstractBadge):
 
     def __init__(self):
         def handler(instance):
-            if instance.added_at >= (instance.question.added_at + timedelta(days=int(settings.NECROMANCER_DIF_DAYS))):
+            if instance.node_type == "answer" and instance.added_at >= (instance.question.added_at + timedelta(days=int(settings.NECROMANCER_DIF_DAYS))):
                 self.award_badge(instance.author, instance)
 
-        super(NecromancerBadge, self).__init__(Answer, "vote_up_count", settings.NECROMANCER_UP_VOTES, handler)
+        super(NecromancerBadge, self).__init__(Node, "vote_up_count", settings.NECROMANCER_UP_VOTES, handler)
 
 
 class TaxonomistBadge(AbstractBadge):
