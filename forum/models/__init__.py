@@ -1,10 +1,11 @@
 from question import Question ,QuestionRevision, FavoriteQuestion, QuestionSubscription
 from answer import Answer, AnswerRevision
 from tag import Tag, MarkedTag
-from meta import Vote, Comment, FlaggedItem, LikedComment
+from meta import Vote, FlaggedItem
 from user import User, Activity, ValidationHash, AuthKeyUserAssociation, SubscriptionSettings
 from repute import Badge, Award, Repute
 from node import Node, NodeRevision, NodeMetaClass, AnonymousNode
+from comment import Comment
 from utils import KeyValue
 
 try:
@@ -27,7 +28,7 @@ __all__ = [
         'Node', 'NodeRevision', 'AnonymousNode', 
         'Question', 'FavoriteQuestion', 'QuestionSubscription', 'QuestionRevision',
         'Answer', 'AnswerRevision',
-        'Tag', 'Comment', 'Vote', 'FlaggedItem', 'MarkedTag', 'LikedComment', 'Badge', 'Award', 'Repute',
+        'Tag', 'Comment', 'Vote', 'FlaggedItem', 'MarkedTag', 'Badge', 'Award', 'Repute',
         'Activity', 'ValidationHash', 'AuthKeyUserAssociation', 'SubscriptionSettings', 'KeyValue', 'User',
         ]
 

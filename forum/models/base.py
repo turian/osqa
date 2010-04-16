@@ -79,6 +79,7 @@ class BaseModel(models.Model):
 
 
 class ActiveObjectManager(models.Manager):
+    use_for_related_fields = True
     def get_query_set(self):
         return super(ActiveObjectManager, self).get_query_set().filter(canceled=False)
 
@@ -158,8 +159,25 @@ class DeletableContent(models.Model):
         else:
             return False
 
+mark_canceled = django.dispatch.Signal(providing_args=['instance'])
 
-from meta import Comment, Vote, FlaggedItem
+class CancelableContent(models.Model):
+    canceled = models.BooleanField(default=False)
+
+    def cancel(self):
+        if not self.canceled:
+            self.canceled = True
+            self.save()
+            mark_canceled.send(sender=self.__class__, instance=self)
+            return True
+            
+        return False
+
+    class Meta:
+        abstract = True
+        app_label = 'forum'
+
+
 from node import Node, NodeRevision
 
 class QandA(Node):

@@ -87,8 +87,7 @@ class Award(GenericContent, UserContent):
         db_table = u'award'
 
 
-class Repute(UserContent):
-    """The reputation histories for user"""
+class Repute(MetaContent, CancelableContent, UserContent):
     value    = models.SmallIntegerField(default=0)
     question = models.ForeignKey('Question')
     reputed_at = models.DateTimeField(default=datetime.datetime.now)
@@ -111,6 +110,11 @@ class Repute(UserContent):
     @property
     def reputation(self):
         return self.user_previous_rep + self.value
+
+    def cancel(self):
+        if super(Repute, self).cancel():
+            self.user.reputation = self.user.reputation - self.value
+            self.user.save()
 
     def save(self, *args, **kwargs):
         self.user_previous_rep = self.user.reputation

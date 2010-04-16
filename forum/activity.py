@@ -1,35 +1,32 @@
 import datetime
 from django.db.models.signals import post_save
 from forum.models import *
-from forum.models.base import marked_deleted
-from forum.models.meta import vote_canceled
+from forum.models.base import marked_deleted, mark_canceled
+from forum.models.node import node_create
 from forum.models.answer import answer_accepted
 from forum.authentication import user_updated
 from forum.const import *
 
-def record_ask_event(instance, created, **kwargs):
-    if created:
-        activity = Activity(user=instance.author, active_at=instance.added_at, content_object=instance, activity_type=TYPE_ACTIVITY_ASK_QUESTION)
-        activity.save()
+def record_ask_event(instance, **kwargs):
+    activity = Activity(user=instance.author, active_at=instance.added_at, content_object=instance, activity_type=TYPE_ACTIVITY_ASK_QUESTION)
+    activity.save()
 
-post_save.connect(record_ask_event, sender=Question)
-
-
-def record_answer_event(instance, created, **kwargs):
-    if created:
-        activity = Activity(user=instance.author, active_at=instance.added_at, content_object=instance, activity_type=TYPE_ACTIVITY_ANSWER)
-        activity.save()
-
-post_save.connect(record_answer_event, sender=Answer)
+node_create.connect(record_ask_event, sender=Question)
 
 
-def record_comment_event(instance, created, **kwargs):
-    if created:
-        act_type = (instance.content_object.__class__ is Question) and TYPE_ACTIVITY_COMMENT_QUESTION or TYPE_ACTIVITY_COMMENT_ANSWER
-        activity = Activity(user=instance.user, active_at=instance.added_at, content_object=instance, activity_type=act_type)
-        activity.save()
+def record_answer_event(instance, **kwargs):
+    activity = Activity(user=instance.author, active_at=instance.added_at, content_object=instance, activity_type=TYPE_ACTIVITY_ANSWER)
+    activity.save()
 
-post_save.connect(record_comment_event, sender=Comment)
+node_create.connect(record_answer_event, sender=Answer)
+
+
+def record_comment_event(instance, **kwargs):
+    act_type = (instance.content_object.__class__ is Question) and TYPE_ACTIVITY_COMMENT_QUESTION or TYPE_ACTIVITY_COMMENT_ANSWER
+    activity = Activity(user=instance.user, active_at=instance.added_at, content_object=instance, activity_type=act_type)
+    activity.save()
+
+node_create.connect(record_comment_event, sender=Comment)
 
 
 def record_revision_event(instance, created, **kwargs):
@@ -80,7 +77,7 @@ def record_cancel_vote(instance, **kwargs):
     activity = Activity(user=instance.user, active_at=datetime.datetime.now(), content_object=instance, activity_type=act_type)
     activity.save()
 
-vote_canceled.connect(record_cancel_vote)
+mark_canceled.connect(record_cancel_vote, sender=Vote)
 
 
 def record_delete_post(instance, **kwargs):

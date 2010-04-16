@@ -232,17 +232,16 @@ def comment(request, id):
         if not user.can_comment(post):
             raise NotEnoughRepPointsException( _('comment'))
 
-        comment = Comment(user=user, node=post)
+        comment = Comment(parent=post)
 
     comment_text = request.POST.get('comment', '').strip()
 
     if not len(comment_text):
         raise Exception(_("Comment is empty"))
 
-    comment.comment=comment_text
-    comment.save()
+    comment.create_revision(user, body=comment_text)
 
-    if comment._is_new:
+    if comment.active_revision.revision == 1:
         return {
             'commands': {
                 'insert_comment': [

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from forum.models import Question, FavoriteQuestion, LikedComment
+from forum.models import Question, FavoriteQuestion
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 from django import template
@@ -107,7 +107,7 @@ def comments(post, user):
         
         if context['can_like']:
             try:
-                LikedComment.active.get(comment=c, user=user)
+                c.votes.get(user=user)
                 context['likes'] = True
             except:
                 context['likes'] = False

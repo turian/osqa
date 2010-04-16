@@ -17,7 +17,7 @@ class Question(QandA):
     view_count           = models.IntegerField(default=0)
     favourite_count      = models.IntegerField(default=0)
     last_activity_at     = models.DateTimeField(default=datetime.datetime.now)
-    last_activity_by     = models.ForeignKey(User, related_name='last_active_in_questions')
+    last_activity_by     = models.ForeignKey(User, related_name='last_active_in_questions', null=True)
 
     favorited_by         = models.ManyToManyField(User, through='FavoriteQuestion', related_name='favorite_questions')
 
@@ -38,12 +38,10 @@ class Question(QandA):
     def answer_accepted(self):
         return self.accepted_answer is not None
 
-    def delete(self):
-        super(Question, self).delete()
-        try:
-            ping_google()
-        except Exception:
-            logging.debug('problem pinging google did you register you sitemap with google?')
+    def save(self, *args, **kwargs):
+        if not self.last_activity_by:
+            self.last_activity_by = self.author
+        super(Question, self).save(*args, **kwargs)
 
     def update_last_activity(self, user):
         self.last_activity_by = user
@@ -77,9 +75,6 @@ class Question(QandA):
 
     def get_revision_url(self):
         return reverse('question_revisions', args=[self.id])
-
-    def get_latest_revision(self):
-        return self.revisions.all()[0]
 
     def get_related_questions(self, count=10):
         cache_key = '%s.related_questions:%d:%d' % (settings.APP_URL, count, self.id)

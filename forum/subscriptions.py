@@ -3,6 +3,7 @@ import re
 import datetime
 from forum.models import User, Question, Comment, QuestionSubscription, SubscriptionSettings, Answer
 from forum.models.user import activity_record
+from forum.models.node import node_create
 from forum.utils.mail import send_email
 from forum.views.readers import question_view
 from django.utils.translation import ugettext as _
@@ -25,9 +26,7 @@ def apply_default_filters(queryset, excluded_id):
 def create_recipients_dict(usr_list):
     return [(s['username'], s['email'], {'username': s['username']}) for s in usr_list]
 
-def question_posted(instance, created, **kwargs):
-    if not created: return
-
+def question_posted(instance, **kwargs):
     question = instance
 
     subscribers = User.objects.values('email', 'username').filter(
@@ -57,12 +56,10 @@ def question_posted(instance, created, **kwargs):
     for user in new_subscribers:
         create_subscription_if_not_exists(question, user)
 
-#post_save.connect(question_posted, sender=Question)
+node_create.connect(question_posted, sender=Question)
 
 
-def answer_posted(instance, created, **kwargs):
-    if not created: return
-
+def answer_posted(instance, **kwargs):
     answer = instance
     question = answer.question
 
@@ -82,11 +79,11 @@ def answer_posted(instance, created, **kwargs):
     if answer.author.subscription_settings.questions_answered:
         create_subscription_if_not_exists(question, answer.author)
 
-post_save.connect(answer_posted, sender=Answer)
+node_create.connect(answer_posted, sender=Answer)
 
 
-def comment_posted(sender, instance, **kwargs):
-    comment = instance.content_object
+def comment_posted(instance, **kwargs):
+    comment = instance
     post = comment.content_object
 
     if post.__class__ == Question:
@@ -107,7 +104,7 @@ def comment_posted(sender, instance, **kwargs):
                                 )
 
     subscribers = subscribers.filter(
-            q_filter, subscription_settings__subscribed_questions='i', subscription_settings__enable_notifications=True 
+            q_filter, subscription_settings__subscribed_questions='i', subscription_settings__enable_notifications=True
     ).exclude(id=comment.user.id).distinct()
 
     recipients = create_recipients_dict(subscribers)
@@ -122,8 +119,7 @@ def comment_posted(sender, instance, **kwargs):
     if comment.user.subscription_settings.questions_commented:
         create_subscription_if_not_exists(question, comment.user)
 
-activity_record.connect(comment_posted, sender=const.TYPE_ACTIVITY_COMMENT_QUESTION, weak=False)
-activity_record.connect(comment_posted, sender=const.TYPE_ACTIVITY_COMMENT_ANSWER, weak=False)
+node_create.connect(comment_posted, sender=Comment)
 
 
 def answer_accepted(instance, created, **kwargs):

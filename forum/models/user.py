@@ -240,12 +240,14 @@ class Activity(GenericContent):
     @property
     def node(self):
         if self.activity_type in (const.TYPE_ACTIVITY_ANSWER, const.TYPE_ACTIVITY_ASK_QUESTION,
-                const.TYPE_ACTIVITY_MARK_ANSWER, const.TYPE_ACTIVITY_UPDATE_QUESTION):
+                const.TYPE_ACTIVITY_MARK_ANSWER):
             return self.content_object
 
-        if self.activity_type in (const.TYPE_ACTIVITY_COMMENT_QUESTION,
-                const.TYPE_ACTIVITY_COMMENT_ANSWER, const.TYPE_ACTIVITY_UPDATE_ANSWER):
-            return self.content_object.node.leaf
+        if self.activity_type in (const.TYPE_ACTIVITY_COMMENT_QUESTION, const.TYPE_ACTIVITY_COMMENT_ANSWER):
+            return self.content_object.parent.leaf
+
+        if self.activity_type in (const.TYPE_ACTIVITY_UPDATE_ANSWER, const.TYPE_ACTIVITY_UPDATE_QUESTION):
+            return self.content_object.node.leaf            
             
         raise NotImplementedError()
 

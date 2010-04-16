@@ -1,5 +1,5 @@
 from django.db.models.signals import post_save
-from forum.models.meta import vote_canceled
+from forum.models.base import mark_canceled
 from forum.models.answer import answer_accepted, answer_accepted_canceled
 
 from forum.models import *
@@ -93,7 +93,7 @@ def on_vote_canceled(instance, **kwargs):
 
         post.author.reputes.create(value=repute_value, question=question, reputation_type=repute_type)
 
-vote_canceled.connect(on_vote_canceled)
+mark_canceled.connect(on_vote_canceled, sender=Vote)
 
 
     

@@ -45,17 +45,8 @@
                 </a>
                 <div class="answer-link">
                     {% spaceless %}
-                    <a href="{{ answer.get_absolute_url }}#{{answer.id}}">{{answer.question.title}}</a>
+                    <a href="{{ answer.get_absolute_url }}">{{answer.headline}}</a>
                     {% endspaceless %}
-                    {% if answer.comment_count %}
-                    <span>
-				    {% blocktrans count answer.comment_count as comment_count %}
-                    (one comment)
-                    {% plural %}
-                    the answer has been commented {{comment_count}} times
-                    {% endblocktrans %}
-                    </span> 
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}

@@ -13,16 +13,16 @@ class NodeContent(models.Model):
     body       = models.TextField()
 
     @property
+    def user(self):
+        return self.author
+
+    @property
     def html(self):
         return mark_safe(sanitize_html(markdown.markdown(self.body)))
 
     @property
     def headline(self):
         return self.title
-
-    @property
-    def summary(self):
-        return strip_tags(self.html)[:300]
 
     def tagname_list(self):
         if self.tagnames:
@@ -58,23 +58,25 @@ class NodeMetaClass(models.Model.__metaclass__):
         name = node_cls.__name__.lower()
 
         def children(self):
-            return node_cls.objects.filter(parent=self)
+            if node_cls._meta.proxy:
+                return node_cls.objects.filter(node_type=name, parent=self)
+            else:
+                return node_cls.objects.filter(parent=self)
 
         def parent(self):
             p = self.__dict__.get('_%s_cache' % name, None)
 
-            if p is None:
-                try:
-                    p = self.parent.leaf
-                    self.__dict__['_%s_cache' % name] = p
-                except Exception, e:
-                    pass
+            if p is None and (self.parent is not None) and self.parent.node_type == name:
+                p = self.parent.leaf
+                self.__dict__['_%s_cache' % name] = p
 
             return p
 
         Node.add_to_class(name + 's', property(children))
         Node.add_to_class(name, property(parent))
 
+
+node_create = django.dispatch.Signal(providing_args=['instance'])
 
 class Node(BaseModel, NodeContent, DeletableContent):
     __metaclass__ = NodeMetaClass
@@ -90,7 +92,7 @@ class Node(BaseModel, NodeContent, DeletableContent):
     vote_up_count         = models.IntegerField(default=0)
     vote_down_count       = models.IntegerField(default=0)
 
-    comment_count        = models.PositiveIntegerField(default=0)
+    comment_count         = models.PositiveIntegerField(default=0)
     offensive_flag_count  = models.SmallIntegerField(default=0)
 
     last_edited_at        = models.DateTimeField(null=True, blank=True)
@@ -101,6 +103,10 @@ class Node(BaseModel, NodeContent, DeletableContent):
     @property
     def leaf(self):
         return NodeMetaClass.types[self.node_type].objects.get(id=self.id)
+
+    @property
+    def summary(self):
+        return strip_tags(self.html)[:300]
 
     def create_revision(self, user, **kwargs):
         revision = NodeRevision(author=user, **kwargs)
@@ -120,12 +126,16 @@ class Node(BaseModel, NodeContent, DeletableContent):
         self.title = revision.title
         self.tagnames = revision.tagnames
         self.body = revision.body
-        
-        self.last_edited_at = datetime.datetime.now()
-        self.last_edited_by = user
+
+        old_revision = self.active_revision
 
         self.active_revision = revision
         self.save()
+
+        if not old_revision:
+            self.last_edited_at = datetime.datetime.now()
+            self.last_edited_by = user
+            node_create.send(sender=self.__class__, instance=self)
 
     def get_tag_list_if_changed(self):
         dirty = self.get_dirty_fields()
