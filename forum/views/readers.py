@@ -83,14 +83,15 @@ def question_list(request, initial, list_description=_('questions'), sort=None, 
         questions = questions.filter(
                 ~Q(tags__id__in=request.user.marked_tags.filter(user_selections__reason='bad')))
 
-    if sort is None:
-        sort = request.utils.sort_method('latest')
-    else:
-        request.utils.set_sort_method(sort)
-    
-    view_dic = {"latest":"-added_at", "active":"-last_activity_at", "hottest":"-answer_count", "mostvoted":"-score" }
+    if sort is not False:
+        if sort is None:
+            sort = request.utils.sort_method('latest')
+        else:
+            request.utils.set_sort_method(sort)
 
-    questions=questions.order_by(view_dic.get(sort, '-added_at'))
+        view_dic = {"latest":"-added_at", "active":"-last_activity_at", "hottest":"-answer_count", "mostvoted":"-score" }
+
+        questions=questions.order_by(view_dic.get(sort, '-added_at'))
 
     return {
         "questions" : questions,
@@ -128,7 +129,7 @@ def question_search(request, keywords):
     initial = question_search(keywords)
 
     return question_list(request, initial, _("questions matching '%(keywords)s'") % {'keywords': keywords},
-            base_path="%s?t=question&q=%s" % (reverse('search'), django_urlquote(keywords)))
+            base_path="%s?t=question&q=%s" % (reverse('search'), django_urlquote(keywords)), sort=False)
     
 
 def tags(request):#view showing a listing of available tags - plain list
