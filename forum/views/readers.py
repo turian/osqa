@@ -60,7 +60,7 @@ def index(request):
 
 @decorators.render('questions.html', 'unanswered')
 def unanswered(request):
-    return question_list(request, Question.objects.filter(answer_accepted=False),
+    return question_list(request, Question.objects.filter(accepted_answer=None),
                          _('Open questions without an accepted answer'))
 
 @decorators.render('questions.html', 'questions')
@@ -186,16 +186,16 @@ def get_answer_sort_order(request):
     return (view_id, view_dic[view_id])
 
 def update_question_view_times(request, question):
-    if not 'question_view_times' in request.session:
-        request.session['question_view_times'] = {}
+    if not 'last_seen_in_question' in request.session:
+        request.session['last_seen_in_question'] = {}
 
-    last_seen = request.session['question_view_times'].get(question.id,None)
+    last_seen = request.session['last_seen_in_question'].get(question.id,None)
 
-    if not last_seen or last_seen < question.last_activity_at:
+    if (not last_seen) or last_seen < question.last_activity_at:
         question_view.send(sender=update_question_view_times, instance=question, user=request.user)
-        request.session['question_view_times'][question.id] = datetime.datetime.now()
+        request.session['last_seen_in_question'][question.id] = datetime.datetime.now()
 
-    request.session['question_view_times'][question.id] = datetime.datetime.now()
+    request.session['last_seen_in_question'][question.id] = datetime.datetime.now()
 
 def question(request, id, slug):
     question = get_object_or_404(Question, id=id)

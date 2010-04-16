@@ -8,7 +8,7 @@ class ActiveTagManager(UndeletedObjectManager):
         return super(UndeletedObjectManager, self).get_query_set().exclude(used_count=0)
 
 
-class Tag(DeletableContent):
+class Tag(BaseModel, DeletableContent):
     name            = models.CharField(max_length=255, unique=True)
     created_by      = models.ForeignKey(User, related_name='created_tags')
     marked_by       = models.ManyToManyField(User, related_name="marked_tags", through="MarkedTag")

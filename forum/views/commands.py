@@ -274,17 +274,13 @@ def accept_answer(request, id):
     commands = {}
 
     if answer.accepted:
-        answer.unmark_accepted()
+        answer.unmark_accepted(user)
         commands['unmark_accepted'] = [answer.id]
     else:
-        try:
-            accepted = question.answers.get(accepted=True)
-            accepted.unmark_accepted()
+        if question.accepted_answer is not None:
+            accepted = question.accepted_answer
+            accepted.unmark_accepted(user)
             commands['unmark_accepted'] = [accepted.id]
-        except:
-            #import sys, traceback
-            #traceback.print_exc(file=sys.stdout)
-            pass
 
         answer.mark_accepted(user)
         commands['mark_accepted'] = [answer.id]

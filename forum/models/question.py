@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 question_view = django.dispatch.Signal(providing_args=['instance', 'user'])
 
 class Question(QandA):
-    answer_accepted = models.BooleanField(default=False)
+    accepted_answer = models.OneToOneField('Answer', null=True, related_name="question_accepting")
     closed          = models.BooleanField(default=False)
     closed_by       = models.ForeignKey(User, null=True, blank=True, related_name='closed_questions')
     closed_at       = models.DateTimeField(null=True, blank=True)
@@ -33,6 +33,10 @@ class Question(QandA):
             return _('[deleted] ') + self.title
 
         return self.title
+
+    @property
+    def answer_accepted(self):
+        return self.accepted_answer is not None
 
     def delete(self):
         super(Question, self).delete()

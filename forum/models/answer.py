@@ -20,18 +20,20 @@ class Answer(QandA):
             self.accepted_at = datetime.datetime.now()
             self.accepted_by = user
             self.save()
-            self.question.answer_accepted = True
+            self.question.accepted_answer = self
             self.question.save()
+            answer_accepted.send(sender=Answer, answer=self, user=user)
             return True
 
         return False
 
-    def unmark_accepted(self):
+    def unmark_accepted(self, user):
         if self.accepted:
             self.accepted = False
             self.save()
-            self.question.answer_accepted = False
+            self.question.accepted_answer = None
             self.question.save()
+            answer_accepted_canceled.send(sender=Answer, answer=self, user=user)
             return True
 
         return False
@@ -70,6 +72,8 @@ class Answer(QandA):
     def __unicode__(self):
         return self.html
         
+answer_accepted = django.dispatch.Signal(providing_args=['answer', 'user'])
+answer_accepted_canceled = django.dispatch.Signal(providing_args=['answer', 'user'])
 
 class AnswerRevision(NodeRevision):
     class Meta:

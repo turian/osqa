@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from forum.models import *
 from forum.models.base import marked_deleted
 from forum.models.meta import vote_canceled
+from forum.models.answer import answer_accepted
 from forum.authentication import user_updated
 from forum.const import *
 
@@ -33,7 +34,7 @@ post_save.connect(record_comment_event, sender=Comment)
 
 def record_revision_event(instance, created, **kwargs):
     if created and instance.revision <> 1 and instance.node.node_type in ('question', 'answer',):
-        activity_type = instance.node == 'question' and TYPE_ACTIVITY_UPDATE_QUESTION or TYPE_ACTIVITY_UPDATE_ANSWER
+        activity_type = instance.node.node_type == 'question' and TYPE_ACTIVITY_UPDATE_QUESTION or TYPE_ACTIVITY_UPDATE_ANSWER
         activity = Activity(user=instance.author, active_at=instance.revised_at, content_object=instance, activity_type=activity_type)
         activity.save()
 
@@ -49,13 +50,11 @@ def record_award_event(instance, created, **kwargs):
 post_save.connect(record_award_event, sender=Award)
 
 
-def record_answer_accepted(instance, created, **kwargs):
-    if not created and 'accepted' in instance.get_dirty_fields() and instance.accepted:
-        activity = Activity(user=instance.question.author, active_at=datetime.datetime.now(), \
-            content_object=instance, activity_type=TYPE_ACTIVITY_MARK_ANSWER)
-        activity.save()
+def record_answer_accepted(answer, user, **kwargs):
+    activity = Activity(user=user, active_at=datetime.datetime.now(), content_object=answer, activity_type=TYPE_ACTIVITY_MARK_ANSWER)
+    activity.save()
 
-post_save.connect(record_answer_accepted, sender=Answer)
+answer_accepted.connect(record_answer_accepted)
 
 
 def update_last_seen(instance, **kwargs):
