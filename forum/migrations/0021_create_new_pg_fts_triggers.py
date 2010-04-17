@@ -8,19 +8,16 @@ from django.conf import settings
 class Migration(SchemaMigration):
     
     def forwards(self, orm):
-        
-        # Adding field 'Question.accepted_answer'
-        db.add_column(u'question', 'accepted_answer', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['forum.Answer'], unique=True, null=True), keep_default=False)
-
         if db.backend_name == "postgres" and not "pgfulltext" in settings.DISABLED_MODULES:
-            db.execute("DROP TRIGGER tsvectorupdate ON question;")
-            db.execute("ALTER TABLE question DROP COLUMN tsv;")    
+            try:
+                import forum_modules.pgfulltext.management
+            except Exception, e:
+                print e
+                pass
+    
     
     def backwards(self, orm):
-        
-        # Deleting field 'Question.accepted_answer'
-        db.delete_column(u'question', 'accepted_answer_id')
-    
+        "Write your backwards methods here."
     
     models = {
         'auth.group': {
@@ -113,19 +110,6 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'db_index': 'True', 'max_length': '50', 'blank': 'True'}),
             'type': ('django.db.models.fields.SmallIntegerField', [], {})
         },
-        'forum.comment': {
-            'Meta': {'object_name': 'Comment', 'db_table': "u'comment'"},
-            'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'comment': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'deleted': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'deleted_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'deleted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'deleted_comments'", 'null': 'True', 'to': "orm['forum.User']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'liked_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'comments_liked'", 'through': "'LikedComment'", 'to': "orm['forum.User']"}),
-            'node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'comments'", 'null': 'True', 'to': "orm['forum.Node']"}),
-            'score': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'comments'", 'to': "orm['forum.User']"})
-        },
         'forum.favoritequestion': {
             'Meta': {'unique_together': "(('question', 'user'),)", 'object_name': 'FavoriteQuestion', 'db_table': "u'favorite_question'"},
             'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
@@ -148,14 +132,6 @@ class Migration(SchemaMigration):
             'key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'value': ('forum.models.utils.PickledObjectField', [], {})
         },
-        'forum.likedcomment': {
-            'Meta': {'object_name': 'LikedComment'},
-            'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'canceled': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'comment': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.Comment']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.User']"})
-        },
         'forum.markedtag': {
             'Meta': {'object_name': 'MarkedTag'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -165,6 +141,7 @@ class Migration(SchemaMigration):
         },
         'forum.node': {
             'Meta': {'object_name': 'Node'},
+            'abs_parent': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'all_children'", 'null': 'True', 'to': "orm['forum.Node']"}),
             'active_revision': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'active'", 'unique': 'True', 'null': 'True', 'to': "orm['forum.NodeRevision']"}),
             'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['forum.User']"}),
@@ -198,10 +175,26 @@ class Migration(SchemaMigration):
             'tagnames': ('django.db.models.fields.CharField', [], {'max_length': '125'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '300'})
         },
+        'forum.openidassociation': {
+            'Meta': {'object_name': 'OpenIdAssociation'},
+            'assoc_type': ('django.db.models.fields.TextField', [], {'max_length': '64'}),
+            'handle': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'issued': ('django.db.models.fields.IntegerField', [], {}),
+            'lifetime': ('django.db.models.fields.IntegerField', [], {}),
+            'secret': ('django.db.models.fields.TextField', [], {'max_length': '255'}),
+            'server_url': ('django.db.models.fields.TextField', [], {'max_length': '2047'})
+        },
+        'forum.openidnonce': {
+            'Meta': {'object_name': 'OpenIdNonce'},
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'salt': ('django.db.models.fields.CharField', [], {'max_length': '50'}),
+            'server_url': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
+            'timestamp': ('django.db.models.fields.IntegerField', [], {})
+        },
         'forum.question': {
             'Meta': {'object_name': 'Question', 'db_table': "u'question'"},
-            'accepted_answer': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['forum.Answer']", 'unique': 'True', 'null': 'True'}),
-            'answer_accepted': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
+            'accepted_answer': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'question_accepting'", 'unique': 'True', 'null': 'True', 'to': "orm['forum.Answer']"}),
             'answer_count': ('django.db.models.fields.PositiveIntegerField', [], {'default': '0'}),
             'close_reason': ('django.db.models.fields.SmallIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'closed': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
@@ -210,7 +203,7 @@ class Migration(SchemaMigration):
             'favorited_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'favorite_questions'", 'through': "'FavoriteQuestion'", 'to': "orm['forum.User']"}),
             'favourite_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'last_activity_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_activity_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'last_active_in_questions'", 'to': "orm['forum.User']"}),
+            'last_activity_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'last_active_in_questions'", 'null': 'True', 'to': "orm['forum.User']"}),
             'node_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['forum.Node']", 'unique': 'True'}),
             'subscribers': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'subscriptions'", 'through': "'QuestionSubscription'", 'to': "orm['forum.User']"}),
             'view_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
@@ -221,13 +214,15 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'QuestionSubscription'},
             'auto_subscription': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_view': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 16, 11, 5, 41, 763000)'}),
+            'last_view': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 17, 2, 50, 12, 337000)'}),
             'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.Question']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.User']"})
         },
         'forum.repute': {
             'Meta': {'object_name': 'Repute', 'db_table': "u'repute'"},
+            'canceled': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'reputes'", 'null': 'True', 'to': "orm['forum.Node']"}),
             'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.Question']"}),
             'reputation_type': ('django.db.models.fields.SmallIntegerField', [], {}),
             'reputed_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
@@ -288,7 +283,7 @@ class Migration(SchemaMigration):
         },
         'forum.validationhash': {
             'Meta': {'unique_together': "(('user', 'type'),)", 'object_name': 'ValidationHash'},
-            'expiration': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 17, 11, 5, 42, 36000)'}),
+            'expiration': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 18, 2, 50, 12, 421000)'}),
             'hash_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'seed': ('django.db.models.fields.CharField', [], {'max_length': '12'}),
