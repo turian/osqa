@@ -13,8 +13,9 @@ class Migration(SchemaMigration):
         db.add_column(u'question', 'accepted_answer', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['forum.Answer'], unique=True, null=True), keep_default=False)
 
         if db.backend_name == "postgres" and not "pgfulltext" in settings.DISABLED_MODULES:
+            pass
             db.execute("DROP TRIGGER tsvectorupdate ON question;")
-            db.execute("ALTER TABLE question DROP COLUMN tsv;")    
+            db.execute("ALTER TABLE question DROP COLUMN tsv;")
     
     def backwards(self, orm):
         

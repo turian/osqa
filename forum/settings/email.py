@@ -39,7 +39,7 @@ Does your SMTP server uses TLS for authentication.
 required=False))
 
 DEFAULT_FROM_EMAIL = Setting('DEFAULT_FROM_EMAIL', '', EMAIL_SET, dict(
-label = _("Site email address"),
+label = _("Site 'from' email address"),
 help_text = _("""
 The address that will show up on the 'from' field on emails sent by your website.
 """),

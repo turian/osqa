@@ -8,8 +8,15 @@ class Migration(DataMigration):
     
     def forwards(self, orm):
         for n in orm.Node.objects.all():
-            n.active_revision = n.revisions.order_by('-id')[0]
-            n.save()
+            try:
+                n.active_revision = n.revisions.order_by('-id')[0]
+                n.save()
+            except:
+                r = orm.NodeRevision(author=n.author, body=n.body, title=n.title, revised_at=datetime.datetime.now(),
+                                 tagnames=n.tagnames, summary='Initial Revision', revision=1, node=n)
+                r.save()
+                n.active_revision = r
+                n.save()
     
     
     def backwards(self, orm):

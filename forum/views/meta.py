@@ -8,9 +8,11 @@ from django.core.urlresolvers import reverse
 from django.core.mail import mail_admins
 from django.utils.translation import ugettext as _
 from forum.utils.forms import get_next_url
-from forum.models import Badge, Award
+from forum.models import Badge, Award, User
 from forum.badges import ALL_BADGES
 from forum import settings
+from forum.utils.mail import send_email
+import re
 
 def favicon(request):
     return HttpResponseRedirect(str(settings.APP_FAVICON))
@@ -27,38 +29,34 @@ def faq(request):
     return render_to_response('faq.html', data, context_instance=RequestContext(request))
 
 def feedback(request):
-    data = {}
-    form = None
     if request.method == "POST":
         form = FeedbackForm(request.POST)
         if form.is_valid():
+            context = {'user': request.user}
+
             if not request.user.is_authenticated:
-                data['email'] = form.cleaned_data.get('email',None)
-            data['message'] = form.cleaned_data['message']
-            data['name'] = form.cleaned_data.get('name',None)
-            message = render_to_response('feedback_email.txt',data,context_instance=RequestContext(request))
-            mail_admins(_('Q&A forum feedback'), message)
+                context['email'] = form.cleaned_data.get('email',None)
+            context['message'] = form.cleaned_data['message']
+            context['name'] = form.cleaned_data.get('name',None)
+
+            recipients = [(adm.username, adm.email) for adm in User.objects.filter(is_superuser=True)]
+
+            send_email(settings.EMAIL_SUBJECT_PREFIX + _("Feedback message from %(site_name)s") % {'site_name': settings.APP_SHORT_NAME},
+                       recipients, "notifications/feedback.html", context)
+            
             msg = _('Thanks for the feedback!')
             request.user.message_set.create(message=msg)
             return HttpResponseRedirect(get_next_url(request))
     else:
         form = FeedbackForm(initial={'next':get_next_url(request)})
 
-    data['form'] = form
-    return render_to_response('feedback.html', data, context_instance=RequestContext(request))
+    return render_to_response('feedback.html', {'form': form}, context_instance=RequestContext(request))
 feedback.CANCEL_MESSAGE=_('We look forward to hearing your feedback! Please, give it next time :)')
 
 def privacy(request):
     return render_to_response('privacy.html', context_instance=RequestContext(request))
 
-def logout(request):#refactor/change behavior?
-#currently you click logout and you get
-#to this view which actually asks you again - do you really want to log out?
-#I guess rationale was to tell the user that s/he may be still logged in
-#through their external login sytem and we'd want to remind them about it
-#however it might be a little annoying
-#why not just show a message: you are logged out of osqa, but
-#if you really want to log out -> go to your openid provider
+def logout(request):
     return render_to_response('logout.html', {
         'next' : get_next_url(request),
     }, context_instance=RequestContext(request))
