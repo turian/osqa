@@ -4,7 +4,7 @@ import logging
 from urllib import unquote
 from django.conf import settings as django_settings
 from django.shortcuts import render_to_response, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, Http404
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, Http404, HttpResponsePermanentRedirect
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.template import RequestContext
 from django import template
@@ -214,16 +214,12 @@ def question(request, id, slug):
     except:
         question = match_question_slug(slug)
         if question is not None:
-            return HttpResponseRedirect(question.get_absolute_url())
+            return HttpResponsePermanentRedirect(question.get_absolute_url())
         else:
             raise Http404()
 
     if slug != urlquote(slugify(question.title)):
-        match = match_question_slug(slug)
-        if match is not None:
-            return HttpResponseRedirect(match.get_absolute_url())    
-
-        return HttpResponseRedirect(question.get_absolute_url())
+        return HttpResponsePermanentRedirect(question.get_absolute_url())
 
     page = int(request.GET.get('page', 1))
     view_id, order_by = get_answer_sort_order(request)
