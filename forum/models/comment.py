@@ -16,6 +16,10 @@ class Comment(Node):
         return self.body
 
     @property
+    def headline(self):
+        return self.absolute_parent.headline
+
+    @property
     def content_object(self):
         return self.parent.leaf
 

@@ -34,29 +34,32 @@ class ActivityNode(template.Node):
         self.activity = template.Variable(activity)
 
     def render(self, context):
-        activity = self.activity.resolve(context)
+        try:
+            activity = self.activity.resolve(context)
 
-        context = {
-            'active_at': activity.active_at,
-            'description': activity.type_as_string,
-            'type': activity.activity_type,
-        }
+            context = {
+                'active_at': activity.active_at,
+                'description': activity.type_as_string,
+                'type': activity.activity_type,
+            }
 
-        if activity.activity_type == const.TYPE_ACTIVITY_PRIZE:
-            context['badge'] = True
-            context['title'] = activity.content_object.badge.name
-            context['url'] = activity.content_object.badge.get_absolute_url()
-            context['badge_type'] = activity.content_object.badge.type
-        else:
-            context['title'] = activity.node.headline
-            context['url'] = activity.node.get_absolute_url()
+            if activity.activity_type == const.TYPE_ACTIVITY_PRIZE:
+                context['badge'] = True
+                context['title'] = activity.content_object.badge.name
+                context['url'] = activity.content_object.badge.get_absolute_url()
+                context['badge_type'] = activity.content_object.badge.type
+            else:
+                context['title'] = activity.node.headline
+                context['url'] = activity.node.get_absolute_url()
 
-        if activity.activity_type in (const.TYPE_ACTIVITY_UPDATE_ANSWER, const.TYPE_ACTIVITY_UPDATE_QUESTION):
-            context['revision'] = True
-            context['summary'] = activity.content_object.summary or \
-                    _('Revision n. %(rev_number)d') % {'rev_number': activity.content_object.revision}
+            if activity.activity_type in (const.TYPE_ACTIVITY_UPDATE_ANSWER, const.TYPE_ACTIVITY_UPDATE_QUESTION):
+                context['revision'] = True
+                context['summary'] = activity.content_object.summary or \
+                        _('Revision n. %(rev_number)d') % {'rev_number': activity.content_object.revision}
 
-        return self.template.render(template.Context(context))
+            return self.template.render(template.Context(context))
+        except Exception, e:
+            return ''
 
 @register.tag
 def activity_item(parser, token):
