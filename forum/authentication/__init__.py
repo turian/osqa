@@ -36,23 +36,23 @@ AUTH_PROVIDERS = dict([
 user_logged_in = django.dispatch.Signal(providing_args=["user", "old_session"])
 user_updated = django.dispatch.Signal(providing_args=["instance", "updated_by"])
 
-def post_stored_anonymous_content(user,old_session,**kwargs):
-    from forum.models import AnonymousQuestion, AnonymousAnswer
-    aq_list = AnonymousQuestion.objects.filter(session_key = old_session)
-    aa_list = AnonymousAnswer.objects.filter(session_key = old_session)
-    import settings
-    if settings.EMAIL_VALIDATION == 'on':#add user to the record
-        for aq in aq_list:
-            aq.author = user
-            aq.save()
-        for aa in aa_list:
-            aa.author = user
-            aa.save()
-        #maybe add pending posts message?
-    else: #just publish the questions
-        for aq in aq_list:
-            aq.publish(user)
-        for aa in aa_list:
-            aa.publish(user)
-
-user_logged_in.connect(post_stored_anonymous_content)
+#def post_stored_anonymous_content(user,old_session,**kwargs):
+#    from forum.models import AnonymousQuestion, AnonymousAnswer
+#    aq_list = AnonymousQuestion.objects.filter(session_key = old_session)
+#    aa_list = AnonymousAnswer.objects.filter(session_key = old_session)
+#    import settings
+#    if settings.EMAIL_VALIDATION == 'on':#add user to the record
+#        for aq in aq_list:
+#            aq.author = user
+#            aq.save()
+#        for aa in aa_list:
+#            aa.author = user
+#            aa.save()
+#        #maybe add pending posts message?
+#    else: #just publish the questions
+#        for aq in aq_list:
+#            aq.publish(user)
+#        for aa in aa_list:
+#            aa.publish(user)
+#
+#user_logged_in.connect(post_stored_anonymous_content)

@@ -8,78 +8,22 @@ from forum.migrations import ProgressBar
 class Migration(DataMigration):
     
     def forwards(self, orm):
-        c_count = orm.Comment.objects.count()
-        print "\nConverting %d comments:" % c_count
-        progress = ProgressBar(c_count)
+        def get_abs_par(n):
+            if n.parent:
+                return get_abs_par(n.parent)
+            else:
+                return n
 
-        id_map = {}
+        n_count = orm.Node.objects.count()
+        print "\nConverting %d nodes:" % n_count
+        progress = ProgressBar(n_count)
 
-        for c in orm.Comment.objects.all():
-            node = orm.Node(
-                node_type='comment',
-                author=c.user,
-                added_at=c.added_at,
-                score=c.score,
-                vote_up_count=c.score,
-                vote_down_count=0,
-                offensive_flag_count=0,
-                last_edited_at=c.added_at,
-                last_edited_by=c.user,
-                body=c.comment,
-                deleted=c.deleted,
-                deleted_by=c.deleted_by,
-                deleted_at=c.deleted_at,
-                parent=c.node,
-            )
-            node.save()
-
-            id_map[c.id] = node
-
-            revision = orm.NodeRevision(
-                summary="Initial revsion",
-                revision=1,
-                revised_at=c.added_at,
-                body=c.comment,
-                author=c.user,
-                node=node,
-            )
-
-            revision.save()
-
-            node.active_revision = revision
-            node.save()
-
-            for v in orm.LikedComment.objects.filter(comment=c):
-                vote = orm.Vote(
-                    node=node,
-                    vote=1,
-                    voted_at=v.added_at,
-                    canceled=v.canceled,
-                    user=v.user,
-                )
-
-                vote.save()
-
-            progress.update()
-
-        print "\n...done\n"
-
-        ctype = orm['contenttypes.ContentType'].objects.get(name="comment").id
-        ntype = orm['contenttypes.ContentType'].objects.get(name="node").id
-
-        #Converting activity
-        activities = orm.Activity.objects.filter(content_type__id=ctype)
-        activity_count = activities.count()
-        print "Converting %d activity references:" % activity_count
-        progress = ProgressBar(activity_count)
-
-        for a in activities:
-            node = id_map.get(a.object_id, None)
-            if node:
-                a.content_type_id = ntype
-                a.object_id = node.id
-                a.save()
-
+        for n in orm.Node.objects.all():
+            if n.parent:
+                n.abs_parent = get_abs_par(n)
+            else:
+                n.abs_parent = None
+            n.save()
             progress.update()
 
         print "\n...done\n"
@@ -179,19 +123,6 @@ class Migration(DataMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'db_index': 'True', 'max_length': '50', 'blank': 'True'}),
             'type': ('django.db.models.fields.SmallIntegerField', [], {})
         },
-        'forum.comment': {
-            'Meta': {'object_name': 'Comment', 'db_table': "u'comment'"},
-            'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'comment': ('django.db.models.fields.CharField', [], {'max_length': '300'}),
-            'deleted': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'deleted_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'deleted_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'deleted_comments'", 'null': 'True', 'to': "orm['forum.User']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'liked_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'comments_liked'", 'through': "'LikedComment'", 'to': "orm['forum.User']"}),
-            'node': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'comments'", 'null': 'True', 'to': "orm['forum.Node']"}),
-            'score': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'comments'", 'to': "orm['forum.User']"})
-        },
         'forum.favoritequestion': {
             'Meta': {'unique_together': "(('question', 'user'),)", 'object_name': 'FavoriteQuestion', 'db_table': "u'favorite_question'"},
             'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
@@ -214,14 +145,6 @@ class Migration(DataMigration):
             'key': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'value': ('forum.models.utils.PickledObjectField', [], {})
         },
-        'forum.likedcomment': {
-            'Meta': {'object_name': 'LikedComment'},
-            'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'canceled': ('django.db.models.fields.BooleanField', [], {'default': 'False', 'blank': 'True'}),
-            'comment': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.Comment']"}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.User']"})
-        },
         'forum.markedtag': {
             'Meta': {'object_name': 'MarkedTag'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -231,6 +154,7 @@ class Migration(DataMigration):
         },
         'forum.node': {
             'Meta': {'object_name': 'Node'},
+            'abs_parent': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'all_children'", 'null': 'True', 'to': "orm['forum.Node']"}),
             'active_revision': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'active'", 'unique': 'True', 'null': 'True', 'to': "orm['forum.NodeRevision']"}),
             'added_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'author': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'nodes'", 'to': "orm['forum.User']"}),
@@ -275,7 +199,7 @@ class Migration(DataMigration):
             'favorited_by': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'favorite_questions'", 'through': "'FavoriteQuestion'", 'to': "orm['forum.User']"}),
             'favourite_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'last_activity_at': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_activity_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'last_active_in_questions'", 'to': "orm['forum.User']"}),
+            'last_activity_by': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'last_active_in_questions'", 'null': 'True', 'to': "orm['forum.User']"}),
             'node_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': "orm['forum.Node']", 'unique': 'True'}),
             'subscribers': ('django.db.models.fields.related.ManyToManyField', [], {'related_name': "'subscriptions'", 'through': "'QuestionSubscription'", 'to': "orm['forum.User']"}),
             'view_count': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
@@ -286,7 +210,7 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'QuestionSubscription'},
             'auto_subscription': ('django.db.models.fields.BooleanField', [], {'default': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_view': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 16, 14, 19, 21, 765000)'}),
+            'last_view': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 17, 1, 20, 29, 905000)'}),
             'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.Question']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['forum.User']"})
         },
@@ -355,7 +279,7 @@ class Migration(DataMigration):
         },
         'forum.validationhash': {
             'Meta': {'unique_together': "(('user', 'type'),)", 'object_name': 'ValidationHash'},
-            'expiration': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 17, 14, 19, 21, 837000)'}),
+            'expiration': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime(2010, 4, 18, 1, 20, 29, 974000)'}),
             'hash_code': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'seed': ('django.db.models.fields.CharField', [], {'max_length': '12'}),

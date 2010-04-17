@@ -8,7 +8,7 @@ import forum.models
 if settings.DATABASE_ENGINE in ('postgresql_psycopg2', 'postgresql', ):
     from django.db.models.signals import post_syncdb
 
-    def install_pg_fts():
+    def install_pg_fts(**kwargs):
         f = open(os.path.join(os.path.dirname(__file__), 'pg_fts_install.sql'), 'r')
 
         try:

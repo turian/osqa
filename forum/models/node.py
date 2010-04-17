@@ -83,6 +83,7 @@ class Node(BaseModel, NodeContent, DeletableContent):
 
     node_type            = models.CharField(max_length=16, default='node')
     parent               = models.ForeignKey('Node', related_name='children', null=True)
+    abs_parent           = models.ForeignKey('Node', related_name='all_children', null=True)
 
     added_at             = models.DateTimeField(default=datetime.datetime.now)
 
@@ -103,6 +104,13 @@ class Node(BaseModel, NodeContent, DeletableContent):
     @property
     def leaf(self):
         return NodeMetaClass.types[self.node_type].objects.get(id=self.id)
+
+    @property    
+    def absolute_parent(self):
+        if not self.abs_parent_id:
+            return self.leaf
+
+        return self.abs_parent.leaf
 
     @property
     def summary(self):
@@ -179,6 +187,9 @@ class Node(BaseModel, NodeContent, DeletableContent):
     def save(self, *args, **kwargs):
         if not self.id:
             self.node_type = self.__class__.__name__.lower()
+
+        if self.parent_id and not self.abs_parent_id:
+            self.abs_parent = self.parent.absolute_parent
             
         tags = self.get_tag_list_if_changed()
         super(Node, self).save(*args, **kwargs)

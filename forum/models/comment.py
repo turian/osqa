@@ -39,11 +39,14 @@ class Comment(Node):
             self._update_parent_comment_count(1)
 
     def is_reply_to(self, user):
-        inreply = re.search('@\w+', self.comment)
+        inreply = re.search('@\w+', self.body)
         if inreply is not None:
             return user.username.startswith(inreply.group(0))
 
         return False
+
+    def get_absolute_url(self):
+        return self.absolute_parent.get_absolute_url() + "#%d" % self.id
 
     def __unicode__(self):
         return self.body

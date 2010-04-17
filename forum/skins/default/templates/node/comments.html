@@ -3,6 +3,7 @@
 
 <div class="comments-container" id="comments-container-{{ post.id }}">
     {% for comment in comments %}
+        <a name="{{ comment.id }}"></a>
         <table class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-{{comment.id}}">
             <tr>
                 <td rowspan="2" class="comment-score" id="comment-{{ comment.id }}-score">
