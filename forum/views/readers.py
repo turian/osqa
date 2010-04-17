@@ -198,10 +198,31 @@ def update_question_view_times(request, question):
 
     request.session['last_seen_in_question'][question.id] = datetime.datetime.now()
 
+def match_question_slug(slug):
+    slug_words = slug.split('-')
+    qs = Question.objects.filter(title__istartswith=slug_words[0])
+
+    for q in qs:
+        if slug == urlquote(slugify(q.title)):
+            return q
+
+    return None
+
 def question(request, id, slug):
-    question = get_object_or_404(Question, id=id)
+    try:
+        question = Question.objects.get(id=id)
+    except:
+        question = match_question_slug(slug)
+        if question is not None:
+            return HttpResponseRedirect(question.get_absolute_url())
+        else:
+            raise Http404()
 
     if slug != urlquote(slugify(question.title)):
+        match = match_question_slug(slug)
+        if match is not None:
+            return HttpResponseRedirect(match.get_absolute_url())    
+
         return HttpResponseRedirect(question.get_absolute_url())
 
     page = int(request.GET.get('page', 1))
