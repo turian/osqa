@@ -6,7 +6,7 @@
         <a name="{{ comment.id }}"></a>
         <table class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-{{comment.id}}">
             <tr>
-                <td rowspan="2" class="comment-score" id="comment-{{ comment.id }}-score">
+                <td rowspan="2" class="comment-score" id="post-{{ comment.id }}-score">
                     {% if comment.score %}{{ comment.score }}{% endif %}
                 </td>
                 <td class="comment-text" id="comment-{{comment.id}}-text">
@@ -18,7 +18,7 @@
                     <a class="comment-user userinfo" href="{{comment.user.get_profile_url}}">{{comment.user}}</a>
                     <span class="comment-age">({% diff_date comment.added_at %})</span>
                     {% if comment.can_like %}
-                        <a id="comment-{{ comment.id }}-like" href="{% url like_comment id=comment.id %}"
+                        <a id="post-{{ comment.id }}-upvote" href="{% url vote_post id=comment.id,vote_type='up' %}"
                          title="{% trans "I like this comment (click again to cancel)" %}" class="ajax-command comment-like{% if comment.likes %} on{% endif %}"
                         rel="nofollow"> </a>
                     {% endif %}

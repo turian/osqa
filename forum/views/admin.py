@@ -5,11 +5,12 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseForbidden, Http404
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
+from django.db.models import Sum
 
 from forum.settings.base import Setting
 from forum.settings.forms import SettingsSetForm
 
-from forum.models import Activity, Question, Answer, User
+from forum.models import Activity, Question, Answer, User, Node
 from forum import const
 from forum import settings
 
@@ -152,5 +153,20 @@ def go_defaults(request):
     settings.SETTINGS_PACK.set_value("default")
 
     request.user.message_set.create(message=_('All values reverted to defaults'))
+    return HttpResponseRedirect(reverse('admin_index'))
+
+
+@super_user_required
+def recalculate_denormalized(request):
+    for n in Node.objects.all():
+        n.vote_up_count = n.votes.filter(canceled=False, vote=1).count()
+        n.vote_down_count = n.votes.filter(canceled=False, vote=-1).count()
+        n.save()
+
+    for u in User.objects.all():
+        u.reputation = u.reputes.filter(canceled=False).aggregate(reputation=Sum('value'))['reputation']
+        u.save()
+
+    request.user.message_set.create(message=_('All values recalculated'))
     return HttpResponseRedirect(reverse('admin_index'))
 

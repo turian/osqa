@@ -58,7 +58,7 @@ answer_accepted_canceled.connect(on_answer_accepted)
 
 
 def on_vote(instance, created, **kwargs):
-    if created and not instance.content_object.wiki:
+    if created and (instance.content_object.node_type in ("question", "answer") and not instance.content_object.wiki):
         post = instance.content_object.leaf
         question = (post.__class__ == Question) and post or post.question
 
@@ -79,7 +79,7 @@ post_save.connect(on_vote, sender=Vote)
 
 
 def on_vote_canceled(instance, **kwargs):
-    if not instance.content_object.wiki:
+    if instance.content_object.node_type in ("question", "answer") and not instance.content_object.wiki:
         post = instance.content_object.leaf
         question = (post.__class__ == Question) and post or post.question
 

@@ -117,6 +117,7 @@ urlpatterns = patterns('',
 
 
     url(r'^%s$' % _('admin/'), app.admin.index, name="admin_index"),
+    url(r'^%s%s$' % (_('admin/'), _('denormalize/')), app.admin.recalculate_denormalized, name="admin_denormalize"),
     url(r'^%s%s$' % (_('admin/'), _('go_bootstrap/')), app.admin.go_bootstrap, name="admin_go_bootstrap"),
     url(r'^%s%s$' % (_('admin/'), _('go_defaults/')), app.admin.go_defaults, name="admin_go_defaults"),
     url(r'^%s(?P<set_name>\w+)/$' % _('admin/'), app.admin.settings_set, name="admin_set"),

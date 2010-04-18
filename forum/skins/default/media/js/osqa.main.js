@@ -1,7 +1,11 @@
 var response_commands = {
     update_post_score: function(id, inc) {
         var $score_board = $('#post-' + id + '-score');
-        $score_board.html(parseInt($score_board.html()) + inc)
+        var current = parseInt($score_board.html())
+        if (isNaN(current)){
+            current = 0;
+        }
+        $score_board.html(current + inc)
     },
 
     update_user_post_vote: function(id, vote_type) {
@@ -54,31 +58,6 @@ var response_commands = {
         var $answer = $('#answer-container-' + id);
         $answer.removeClass('accepted-answer');
         $answer.find('.accept-answer').removeClass('on');
-    },
-
-    update_comment_score: function(id, inc) {
-        var $comment_score = $('#comment-' + id + '-score');
-        var count = parseInt($comment_score.html());
-
-        if (isNaN(count))
-            count = 0;
-
-        count += inc;
-
-        if (count == 0)
-            count = '';
-
-        $comment_score.html(count);
-    },
-
-    update_likes_comment_mark: function(id, like_type) {
-        var $comment_like_mark = $("#comment-" + id + "-like");
-
-        if (like_type == "on") {
-            $comment_like_mark.addClass("on");
-        } else {
-            $comment_like_mark.removeClass("on");    
-        }
     },
 
     remove_comment: function(id) {
