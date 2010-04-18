@@ -3,7 +3,10 @@ from forum import const
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User as DjangoUser, AnonymousUser as DjangoAnonymousUser
 from django.db.models import Q
-from hashlib import md5
+try:
+    from hashlib import md5
+except:
+    import md5
 import string
 from random import Random
 
@@ -97,7 +100,7 @@ class User(BaseModel, DjangoUser):
 
     @property
     def gravatar(self):
-        return hashlib.md5(self.email).hexdigest()
+        return md5(self.email).hexdigest()
 
     def save(self, *args, **kwargs):
         if self.reputation < 0:

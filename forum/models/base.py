@@ -1,5 +1,4 @@
 import datetime
-import hashlib
 from urllib import quote_plus, urlencode
 from django.db import models, IntegrityError, connection, transaction
 from django.utils.http import urlquote  as django_urlquote
@@ -194,14 +193,6 @@ class QandA(Node):
             self.wikified_at = datetime.datetime.now()
             self.save()
 
-    def save(self, *args, **kwargs):
-        self.__dict__['score'] = self.__dict__['vote_up_count'] - self.__dict__['vote_down_count']
-        super(QandA,self).save(*args, **kwargs)
-
-        try:
-            ping_google()
-        except Exception:
-            logging.debug('problem pinging google did you register you sitemap with google?')
 
 
 

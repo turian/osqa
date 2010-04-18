@@ -190,6 +190,8 @@ class Node(BaseModel, NodeContent, DeletableContent):
 
         if self.parent_id and not self.abs_parent_id:
             self.abs_parent = self.parent.absolute_parent
+
+        self.__dict__['score'] = self.__dict__['vote_up_count'] - self.__dict__['vote_down_count']
             
         tags = self.get_tag_list_if_changed()
         super(Node, self).save(*args, **kwargs)
