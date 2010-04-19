@@ -77,6 +77,7 @@ class NodeMetaClass(models.Model.__metaclass__):
 
 
 node_create = django.dispatch.Signal(providing_args=['instance'])
+node_edit = django.dispatch.Signal(providing_args=['instance'])
 
 class Node(BaseModel, NodeContent, DeletableContent):
     __metaclass__ = NodeMetaClass
@@ -136,14 +137,17 @@ class Node(BaseModel, NodeContent, DeletableContent):
         self.body = revision.body
 
         old_revision = self.active_revision
-
         self.active_revision = revision
-        self.save()
 
         if not old_revision:
+            signal = node_create
+        else:
             self.last_edited_at = datetime.datetime.now()
             self.last_edited_by = user
-            node_create.send(sender=self.__class__, instance=self)
+            signal = node_edit
+
+        self.save()
+        signal.send(sender=self.__class__, instance=self)
 
     def get_tag_list_if_changed(self):
         dirty = self.get_dirty_fields()
