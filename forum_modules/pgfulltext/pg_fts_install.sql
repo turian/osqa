@@ -21,64 +21,66 @@
   CREATE OR REPLACE FUNCTION node_ranking(node_id int, srch text) RETURNS float AS $$
   declare
      v tsvector;
+     cv tsvector;
+     rev_id int;
+     child_count int;
+     r record;
   begin
-     SELECT tsv INTO v FROM forum_node WHERE id = node_id;
-     RETURN ts_rank_cd(v || children_tsv(node_id), plainto_tsquery(srch), 32);
+     SELECT active_revision_id INTO rev_id FROM forum_node WHERE id = node_id;
+     SELECT tsv INTO v FROM forum_noderevision WHERE id = rev_id;
+
+    SELECT  count(*) INTO child_count FROM forum_node WHERE abs_parent_id = node_id AND NOT deleted;
+
+    IF child_count > 0 THEN
+       FOR r in SELECT * FROM forum_node WHERE abs_parent_id = node_id  AND NOT deleted LOOP
+           SELECT tsv INTO cv FROM forum_noderevision WHERE id = r.active_revision_id;
+           v :=(v || cv);
+       END LOOP;
+     END IF;
+     RAISE NOTICE '%', v;
+
+     RETURN ts_rank_cd(v, plainto_tsquery('english', srch), 32);
   end
   $$ LANGUAGE plpgsql;
 
-  CREATE OR REPLACE FUNCTION children_tsv(id int) RETURNS tsvector AS $$
-    declare
-      v tsvector := ''::tsvector;
-      r record;
-    begin
-      FOR r IN SELECT * FROM forum_node WHERE parent_id = id LOOP
-        v := v || r.tsv || children_tsv(r.id);
-      END LOOP;
-      RETURN v;
-    end
-  $$ LANGUAGE plpgsql;
+select node_ranking(50, 'free');
+
+
 
   CREATE OR REPLACE FUNCTION set_node_tsv() RETURNS TRIGGER AS $$
   begin
-    IF (tg_op = 'INSERT') THEN
       new.tsv :=
          setweight(to_tsvector('english', coalesce(new.tagnames,'')), 'A') ||
          setweight(to_tsvector('english', coalesce(new.title,'')), 'B') ||
          setweight(to_tsvector('english', coalesce(new.body,'')), 'C');
-    ELSIF (new.active_revision_id <> old.active_revision_id) OR (new.tsv IS NULL) THEN
-      new.tsv :=
-         setweight(to_tsvector('english', coalesce(new.tagnames,'')), 'A') ||
-         setweight(to_tsvector('english', coalesce(new.title,'')), 'B') ||
-         setweight(to_tsvector('english', coalesce(new.body,'')), 'C'); 
-    END IF;
+
     RETURN new;
   end
   $$ LANGUAGE plpgsql;
 
-  CREATE OR REPLACE FUNCTION public.create_tsv_node_column ()
+  CREATE OR REPLACE FUNCTION public.create_tsv_noderevision_column ()
       RETURNS TEXT
       AS $$
-          ALTER TABLE forum_node ADD COLUMN tsv tsvector;
+          ALTER TABLE forum_noderevision ADD COLUMN tsv tsvector;
 
           CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
-	        ON forum_node FOR EACH ROW EXECUTE PROCEDURE set_node_tsv();
+	        ON forum_noderevision FOR EACH ROW EXECUTE PROCEDURE set_node_tsv();
 
-	      CREATE INDEX node_tsv ON forum_node USING gin(tsv);
+	      CREATE INDEX noderevision_tsv ON forum_noderevision USING gin(tsv);
 
           SELECT 'tsv column created'::TEXT;
       $$
   LANGUAGE 'sql';
 
   SELECT CASE WHEN
-     (SELECT true::BOOLEAN FROM pg_attribute WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'forum_node') AND attname = 'tsv')
+     (SELECT true::BOOLEAN FROM pg_attribute WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'forum_noderevision') AND attname = 'tsv')
   THEN
      (SELECT 'Tsv column already exists'::TEXT)
   ELSE
-     (SELECT public.create_tsv_node_column())
+     (SELECT public.create_tsv_noderevision_column())
 
   END;
 
-  DROP FUNCTION public.create_tsv_node_column ();
+  DROP FUNCTION public.create_tsv_noderevision_column();
 
-  UPDATE forum_node SET id=id WHERE TRUE;
+  UPDATE forum_noderevision SET id=id WHERE TRUE;

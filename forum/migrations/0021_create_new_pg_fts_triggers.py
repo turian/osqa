@@ -12,7 +12,6 @@ class Migration(SchemaMigration):
             try:
                 import forum_modules.pgfulltext.management
             except Exception, e:
-                print e
                 pass
     
     
