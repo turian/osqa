@@ -2,15 +2,24 @@
 <!-- index.html -->
 {% load general_sidebar_tags %}
 {% load question_list_tags %}
-{% load cache %}
-
+{% load i18n %}
 {% block sidebar %}
-{% cache 60 index_sidebar settings.APP_URL %}
+    {% if not request.user.is_authenticated %}
+    <div class="boxA">
+        <h3>{% trans "welcome to " %}{{ settings.APP_SHORT_NAME }}</h3>
+        <div class="body">
+          {{ settings.APP_INTRO|safe }}
+          <div class="more"><a href="{% url about %}">{% trans "about" %} </a></div>
+          <div class="more"><a href="{% url faq %}">{% trans "faq" %} </a></div>
+        </div>
+    </div>
+    {% endif %}
     {% question_list_count %}
-    {% tag_selector %}
+    {% if request.user.is_authenticated %}
+        {% tag_selector %}
+    {% endif %}
     {% recent_tags %}
     {% recent_awards %}
-{% endcache %}
 {% endblock %}
 <!-- index.html -->
 
