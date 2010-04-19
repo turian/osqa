@@ -63,7 +63,7 @@ class CannotDoubleActionException(Exception):
 
 @command
 def vote_post(request, id, vote_type):
-    post = get_object_or_404(Node, id=id)
+    post = get_object_or_404(Node, id=id).leaf
     vote_score = vote_type == 'up' and 1 or -1
     user = request.user
 

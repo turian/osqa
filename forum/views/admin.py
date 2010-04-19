@@ -159,6 +159,7 @@ def go_defaults(request):
 @super_user_required
 def recalculate_denormalized(request):
     for n in Node.objects.all():
+        n = n.leaf
         n.vote_up_count = n.votes.filter(canceled=False, vote=1).count()
         n.vote_down_count = n.votes.filter(canceled=False, vote=-1).count()
         n.save()

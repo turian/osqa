@@ -210,7 +210,7 @@ def match_question_slug(slug):
 
 def question(request, id, slug):
     try:
-        question = Question.objects.get(id=id)
+        question = Question.objects.get(node_type="question", id=id)
     except:
         question = match_question_slug(slug)
         if question is not None:

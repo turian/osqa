@@ -20,7 +20,7 @@ class Vote(MetaContent, CancelableContent, UserContent):
         return '[%s] voted at %s: %s' %(self.user, self.voted_at, self.vote)
 
     def _update_post_vote_count(self, diff):
-        post = self.node
+        post = self.node.leaf
         field = self.vote == 1 and 'vote_up_count' or 'vote_down_count'
         post.__dict__[field] = post.__dict__[field] + diff
         post.save()
