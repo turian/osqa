@@ -120,7 +120,7 @@ def search(request):
 
 @decorators.render('questions.html')
 def question_search(request, keywords):
-    def question_search(keywords, orderby):
+    def question_search(keywords):
         return Question.objects.filter(Q(title__icontains=keywords) | Q(html__icontains=keywords))
 
     from forum.modules import get_handler
