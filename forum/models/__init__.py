@@ -10,7 +10,7 @@ from utils import KeyValue
 
 try:
     from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], [r"^forum\.models\.utils\.\w+"])
+    add_introspection_rules([], [r"^forum\.models\.\w+\.\w+"])
 except:
     pass
 

@@ -5,7 +5,7 @@ from forms import ImageFormWidget
 from django.forms.widgets import Textarea
 from django.utils.translation import ugettext_lazy as _
 
-INTERNAL_VERSION = Setting('INTERNAL_VERSION', "56")
+INTERNAL_VERSION = Setting('INTERNAL_VERSION', "58")
 SETTINGS_PACK = Setting('SETTINGS_PACK', "default")
 
 from basic import *

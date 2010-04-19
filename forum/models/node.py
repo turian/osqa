@@ -90,12 +90,12 @@ class Node(BaseModel, NodeContent, DeletableContent):
 
     tags                 = models.ManyToManyField('Tag', related_name='%(class)ss')
 
-    score                 = models.IntegerField(default=0)
-    vote_up_count         = models.IntegerField(default=0)
+    score                 = DenormalizedField(default=0)
+    vote_up_count         = DenormalizedField(default=0)
     vote_down_count       = models.IntegerField(default=0)
 
-    comment_count         = models.PositiveIntegerField(default=0)
-    offensive_flag_count  = models.SmallIntegerField(default=0)
+    comment_count         = DenormalizedField(default=0)
+    offensive_flag_count  = DenormalizedField(default=0)
 
     last_edited_at        = models.DateTimeField(null=True, blank=True)
     last_edited_by        = models.ForeignKey(User, null=True, blank=True, related_name='last_edited_%(class)ss')
@@ -205,7 +205,7 @@ class Node(BaseModel, NodeContent, DeletableContent):
         app_label = 'forum'
 
 
-class NodeRevision(NodeContent):
+class NodeRevision(BaseModel, NodeContent):
     node       = models.ForeignKey(Node, related_name='revisions')
     summary    = models.CharField(max_length=300)
     revision   = models.PositiveIntegerField()

@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 
 from forum.models.user import activity_record
+from forum.models.base import denorm_update
 from forum.models import Badge, Award, Activity, Node
 
 import logging
@@ -59,12 +60,11 @@ class AbstractBadge(object):
 class CountableAbstractBadge(AbstractBadge):
 
     def __init__(self, model, field, expected_value, handler):
-        def wrapper(instance, **kwargs):
-            dirty_fields = instance.get_dirty_fields()
-            if field in dirty_fields and instance.__dict__[field] == expected_value:
+        def wrapper(instance, sfield, old, new, **kwargs):
+            if sfield == field and (new == expected_value) or (old < expected_value and new > expected_value):
                 handler(instance=instance)
         
-        post_save.connect(wrapper, sender=model, weak=False)
+        denorm_update.connect(wrapper, sender=model, weak=False)
 
 class PostCountableAbstractBadge(CountableAbstractBadge):
     def __init__(self, model, field, expected_value):

@@ -7,6 +7,7 @@ from forum.badges.base import PostCountableAbstractBadge, ActivityAbstractBadge,
         ActivityCountAbstractBadge, CountableAbstractBadge, AbstractBadge, NodeCountableAbstractBadge
 from forum.models import Node, Question, Answer, Activity, Tag
 from forum.models.user import activity_record
+from forum.models.base import denorm_update
 from forum import const
 
 import settings
@@ -237,22 +238,21 @@ class TeacherBadge(CountableAbstractBadge):
 class AcceptedAndVotedAnswerAbstractBadge(AbstractBadge):
     def __init__(self, up_votes, handler):
         def wrapper(sender, instance, **kwargs):
-            if sender is Node:
-                if not (instance.node_type == "answer" and "vote_up_count" in instance.get_dirty_fields()):
+            if sender is Answer:
+                if (not kwargs['field'] == "score") or (kwargs['new'] < kwargs['old']):
                     return
 
                 answer = instance.leaf
+                vote_count = kwargs['new']
             else:
                 answer = instance.content_object
+                vote_count = answer.vote_up_count
 
-            accepted = answer.accepted
-            vote_count = answer.vote_up_count
-
-            if accepted and vote_count == up_votes:
+            if answer.accepted and vote_count == up_votes:
                 handler(answer)
 
         activity_record.connect(wrapper, sender=const.TYPE_ACTIVITY_MARK_ANSWER, weak=False)
-        post_save.connect(wrapper, sender=Node, weak=False)
+        denorm_update.connect(wrapper, sender=Node, weak=False)
 
 
 class EnlightenedBadge(AcceptedAndVotedAnswerAbstractBadge):

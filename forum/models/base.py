@@ -1,4 +1,5 @@
 import datetime
+import re
 from urllib import quote_plus, urlencode
 from django.db import models, IntegrityError, connection, transaction
 from django.utils.http import urlquote  as django_urlquote
@@ -21,6 +22,15 @@ from forum.const import *
 
 class CachedManager(models.Manager):
     use_for_related_fields = True
+    int_cache_re = re.compile('^_[\w_]+cache$')
+
+    def cache_obj(self, obj):
+        int_cache_keys = [k for k in obj.__dict__.keys() if self.int_cache_re.match(k)]
+
+        for k in int_cache_keys:
+            del obj.__dict__[k]
+
+        cache.set(self.model.cache_key(obj.id), obj, 60 * 60)
 
     def get(self, *args, **kwargs):
         try:
@@ -35,7 +45,9 @@ class CachedManager(models.Manager):
 
             if obj is None:
                 obj = super(CachedManager, self).get(*args, **kwargs)
-                cache.set(key, obj, 60 * 60)
+                self.cache_obj(obj)
+            else:
+                d = obj.__dict__
 
             return obj
         
@@ -47,6 +59,17 @@ class CachedManager(models.Manager):
         except:
             return super(CachedManager, self).get_or_create(*args, **kwargs)
 
+denorm_update = django.dispatch.Signal(providing_args=["instance", "field", "old", "new"])
+
+class DenormalizedField(models.PositiveIntegerField):
+    __metaclass__ = models.SubfieldBase
+
+    def contribute_to_class(self, cls, name):
+        super (DenormalizedField, self).contribute_to_class(cls, name)
+        if not hasattr(cls, '_denormalizad_fields'):
+            cls._denormalizad_fields = []
+
+        cls._denormalizad_fields.append(name)
 
 class BaseModel(models.Model):
     objects = CachedManager()
@@ -69,9 +92,32 @@ class BaseModel(models.Model):
                  if self._original_state.get(k, missing) == missing or self._original_state[k] != v])
 
     def save(self, *args, **kwargs):
+        put_back = None
+
+        if hasattr(self.__class__, '_denormalizad_fields'):
+            dirty = self.get_dirty_fields()
+            put_back = [f for f in self.__class__._denormalizad_fields if f in dirty]
+
+            if put_back:
+                for n in put_back:
+                    self.__dict__[n] = models.F(n) + (self.__dict__[n] - dirty[n])
+
         super(BaseModel, self).save(*args, **kwargs)
+
+        if put_back:
+            try:
+                self.__dict__.update(
+                    self.__class__.objects.filter(id=self.id).values(*put_back)[0]
+                )
+                for f in put_back:
+                    denorm_update.send(sender=self.__class__, instance=self, field=f,
+                                       old=self._original_state[f], new=self.__dict__[f])
+            except:
+                #todo: log this properly
+                pass
+
         self._original_state = dict(self.__dict__)
-        cache.set(self.cache_key(self.pk), self, 86400)
+        self.__class__.objects.cache_obj(self)
 
     def delete(self):
         cache.delete(self.cache_key(self.pk))
@@ -87,10 +133,7 @@ class UndeletedObjectManager(models.Manager):
     def get_query_set(self):
         return super(UndeletedObjectManager, self).get_query_set().filter(deleted=False)
 
-class GenericContent(BaseModel):
-    """
-        Base class for Vote, Comment and FlaggedItem
-    """
+class GenericContent(models.Model):
     content_type   = models.ForeignKey(ContentType)
     object_id      = models.PositiveIntegerField()
     content_object = generic.GenericForeignKey('content_type', 'object_id')

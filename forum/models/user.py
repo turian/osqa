@@ -80,11 +80,11 @@ class User(BaseModel, DjangoUser):
     is_approved = models.BooleanField(default=False)
     email_isvalid = models.BooleanField(default=False)
     email_key = models.CharField(max_length=32, null=True)
-    reputation = models.PositiveIntegerField(default=1)
+    reputation = DenormalizedField(default=1)
 
-    gold = models.SmallIntegerField(default=0)
-    silver = models.SmallIntegerField(default=0)
-    bronze = models.SmallIntegerField(default=0)
+    gold = DenormalizedField(default=0)
+    silver = DenormalizedField(default=0)
+    bronze = DenormalizedField(default=0)
 
     questions_per_page = models.SmallIntegerField(choices=QUESTIONS_PER_PAGE_CHOICES, default=10)
     hide_ignored_questions = models.BooleanField(default=False)
