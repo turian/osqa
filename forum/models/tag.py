@@ -15,7 +15,6 @@ class Tag(BaseModel, DeletableContent):
     # Denormalised data
     used_count = models.PositiveIntegerField(default=0)
 
-    objects = models.Manager()
     active = ActiveTagManager()
 
     class Meta(DeletableContent.Meta):
