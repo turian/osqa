@@ -173,6 +173,7 @@ def tagsimport(dump, uidmap):
 
 def postimport(dump, uidmap, tagmap):
     history = {}
+    accepted = {}
     all = {}
 
     for h in readTable(dump, "PostHistory"):
@@ -184,8 +185,6 @@ def postimport(dump, uidmap, tagmap):
     posts = readTable(dump, "Posts")
 
     for sxpost in posts:
-        accepted = {}
-
         postclass = sxpost.get('posttypeid') == '1' and orm.Question or orm.Answer
 
         post = postclass(
@@ -233,6 +232,7 @@ def postimport(dump, uidmap, tagmap):
                 post.closed_at = datetime.now()
 
             if sxpost.get('acceptedanswerid', None):
+                post.accepted_answer_id = int(sxpost.get('acceptedanswerid'))
                 accepted[int(sxpost.get('acceptedanswerid'))] = post
 
         else:
@@ -240,13 +240,9 @@ def postimport(dump, uidmap, tagmap):
             post.parent_id = sxpost['parentid']
 
             if int(post.id) in accepted:
-                question = accepted[int(post.id)]
-                question.accepted_answer_id = post
-                question.save()
-
                 post.accepted = True
                 post.accepted_at = datetime.now()
-                post.accepted_by_id = question.author_id
+                post.accepted_by_id = accepted[int(post.id)].author_id
 
         all[int(post.id)] = post
 
@@ -426,6 +422,7 @@ def sximport(dump, options):
     
     
 PG_SEQUENCE_RESETS = """
+SELECT setval('"auth_user_id_seq"', coalesce(max("id"), 1) + 2, max("id") IS NOT null) FROM "auth_user";
 SELECT setval('"auth_user_groups_id_seq"', coalesce(max("id"), 1) + 2, max("id") IS NOT null) FROM "auth_user_groups";
 SELECT setval('"auth_user_user_permissions_id_seq"', coalesce(max("id"), 1) + 2, max("id") IS NOT null) FROM "auth_user_user_permissions";
 SELECT setval('"activity_id_seq"', coalesce(max("id"), 1) + 2, max("id") IS NOT null) FROM "activity";
