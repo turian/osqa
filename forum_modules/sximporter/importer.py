@@ -163,7 +163,7 @@ def tagsimport(dump, uidmap):
             id = int(sxtag['id']),
             name = sxtag['name'],
             used_count = int(sxtag['count']),
-            created_by_id = uidmap[sxtag['userid']],
+            created_by_id = uidmap[sxtag.get('userid', 1)],
         )
         otag.save()
 
