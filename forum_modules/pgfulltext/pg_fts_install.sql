@@ -37,15 +37,10 @@
            v :=(v || cv);
        END LOOP;
      END IF;
-     RAISE NOTICE '%', v;
 
      RETURN ts_rank_cd(v, plainto_tsquery('english', srch), 32);
   end
   $$ LANGUAGE plpgsql;
-
-select node_ranking(50, 'free');
-
-
 
   CREATE OR REPLACE FUNCTION set_node_tsv() RETURNS TRIGGER AS $$
   begin
@@ -58,19 +53,20 @@ select node_ranking(50, 'free');
   end
   $$ LANGUAGE plpgsql;
 
-  CREATE OR REPLACE FUNCTION public.create_tsv_noderevision_column ()
-      RETURNS TEXT
-      AS $$
+  CREATE OR REPLACE FUNCTION public.create_tsv_noderevision_column () RETURNS TEXT AS $$
+  begin
           ALTER TABLE forum_noderevision ADD COLUMN tsv tsvector;
+
+          DROP TRIGGER IF EXISTS tsvectorupdate ON forum_noderevision;
 
           CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
 	        ON forum_noderevision FOR EACH ROW EXECUTE PROCEDURE set_node_tsv();
 
 	      CREATE INDEX noderevision_tsv ON forum_noderevision USING gin(tsv);
 
-          SELECT 'tsv column created'::TEXT;
-      $$
-  LANGUAGE 'sql';
+          RETURN 'tsv column created'::TEXT;
+  end
+  $$ LANGUAGE plpgsql;
 
   SELECT CASE WHEN
      (SELECT true::BOOLEAN FROM pg_attribute WHERE attrelid = (SELECT oid FROM pg_class WHERE relname = 'forum_noderevision') AND attname = 'tsv')
