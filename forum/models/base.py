@@ -61,7 +61,7 @@ class CachedManager(models.Manager):
 
 denorm_update = django.dispatch.Signal(providing_args=["instance", "field", "old", "new"])
 
-class DenormalizedField(models.PositiveIntegerField):
+class DenormalizedField(models.IntegerField):
     __metaclass__ = models.SubfieldBase
 
     def contribute_to_class(self, cls, name):

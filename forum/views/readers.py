@@ -200,7 +200,7 @@ def update_question_view_times(request, question):
 
 def match_question_slug(slug):
     slug_words = slug.split('-')
-    qs = Question.objects.filter(title__istartswith=slug_words[0])
+    qs = Question.objects.filter(node_type="question", title__istartswith=slug_words[0])
 
     for q in qs:
         if slug == urlquote(slugify(q.title)):

@@ -121,12 +121,10 @@ class User(BaseModel, DjangoUser):
         self.message_set.all().delete()
 
     def get_profile_url(self):
-        """Returns the URL for this User's profile."""
         return "/%s%d/%s" % (_('users/'), self.id, slugify(self.username))
 
     def get_profile_link(self):
         profile_link = u'<a href="%s">%s</a>' % (self.get_profile_url(),self.username)
-        logging.debug('in get profile link %s' % profile_link)
         return mark_safe(profile_link)
 
     def get_vote_count_today(self):

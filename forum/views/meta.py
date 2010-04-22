@@ -23,7 +23,6 @@ def about(request):
 def faq(request):
     data = {
         'gravatar_faq_url': reverse('faq') + '#gravatar',
-        #'send_email_key_url': reverse('send_email_key'),
         'ask_question_url': reverse('ask'),
     }
     return render_to_response('faq.html', data, context_instance=RequestContext(request))

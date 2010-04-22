@@ -18,7 +18,19 @@ sitemaps = {
 }
 
 APP_PATH = os.path.dirname(__file__)
-urlpatterns = patterns('',
+
+from forum.modules import get_modules_script
+
+module_patterns = get_modules_script('urls')
+
+urlpatterns = patterns('')
+
+for pattern_file in module_patterns:
+    pattern = getattr(pattern_file, 'urlpatterns', None)
+    if pattern:
+        urlpatterns += pattern
+
+urlpatterns += patterns('',
     url(r'^$', app.readers.index, name='index'),
     url(r'^sitemap.xml$', 'django.contrib.sitemaps.views.sitemap', {'sitemaps': sitemaps}, name='sitemap'),
     #(r'^favicon\.ico$', 'django.views.generic.simple.redirect_to', {'url': '/media/images/favicon.ico'}),
@@ -124,13 +136,4 @@ urlpatterns = patterns('',
 
     url(r'^feeds/rss/$', RssLastestQuestionsFeed, name="latest_questions_feed"),
 )
-
-from forum.modules import get_modules_script
-
-module_patterns = get_modules_script('urls')
-
-for pattern_file in module_patterns:
-    pattern = getattr(pattern_file, 'urlpatterns', None)
-    if pattern:
-        urlpatterns += pattern
 

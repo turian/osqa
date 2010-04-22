@@ -43,7 +43,7 @@ class AnonymousNotAllowedException(Exception):
 
 class NotEnoughLeftException(Exception):
     def __init__(self, action, limit):
-        super(NotEnoughRepPointsException, self).__init__(
+        super(NotEnoughLeftException, self).__init__(
             _("""
             Sorry, but you don't have enough %(action)s left for today..<br />
             The limit is %(limit)s per day..<br />

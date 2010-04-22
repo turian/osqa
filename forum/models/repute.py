@@ -82,7 +82,7 @@ class Award(GenericContent, UserContent):
             self.user.save()
 
     class Meta:
-        unique_together = ('content_type', 'object_id', 'user', 'badge')
+        #unique_together = ('content_type', 'object_id', 'user', 'badge')
         app_label = 'forum'
         db_table = u'award'
 
