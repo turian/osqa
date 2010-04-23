@@ -120,8 +120,11 @@ def userimport(dump, options):
 
             osqau.save()
 
-            s = orm.SubscriptionSettings(user=osqau)
-            s.save()
+            try:
+                orm.SubscriptionSettings.objects.get(user=osqau)
+            except:
+                s = orm.SubscriptionSettings(user=osqau)
+                s.save()
 
             uidmapper[osqau.id] = osqau.id
         else:
