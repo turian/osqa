@@ -15,7 +15,6 @@ except:
 
 
 if install:
-    print 'install'
     f = open(os.path.join(os.path.dirname(__file__), 'pg_fts_install.sql'), 'r')
 
     try:
@@ -32,8 +31,8 @@ if install:
         kv.save()
         
     except Exception, e:
-        import sys, traceback
-        traceback.print_exc(file=sys.stdout)
+        #import sys, traceback
+        #traceback.print_exc(file=sys.stdout)
         pass
     finally:
         cursor.close()

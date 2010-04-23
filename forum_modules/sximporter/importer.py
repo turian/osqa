@@ -47,7 +47,7 @@ class UnknownUser(object):
 class IdMapper(dict):
     def __getitem__(self, key):
         key = int(key)
-        return super(IdMapper, self).get(key, key)
+        return super(IdMapper, self).get(key, 1)
 
     def __setitem__(self, key, value):
         super(IdMapper, self).__setitem__(int(key), int(value))
@@ -80,16 +80,16 @@ def userimport(dump, options):
             username = sxu.get('displayname', sxu.get('displaynamecleaned', sxu.get('realname', UnknownUser())))
 
             if not isinstance(username, UnknownUser) and username in user_by_name:
-                if options.get('mergesimilar', False) and sxu.get('email', 'INVALID') == user_by_name[username].email:
-                    osqau = user_by_name[username]
-                    create = False
-                    uidmapper[sxu.get('id')] = osqau.id
-                else:
-                    inc = 1
-                    while ("%s %d" % (username, inc)) in user_by_name:
-                        inc += 1
+                #if options.get('mergesimilar', False) and sxu.get('email', 'INVALID') == user_by_name[username].email:
+                #    osqau = user_by_name[username]
+                #    create = False
+                #    uidmapper[sxu.get('id')] = osqau.id
+                #else:
+                inc = 1
+                while ("%s %d" % (username, inc)) in user_by_name:
+                    inc += 1
 
-                    username = "%s %d" % (username, inc)
+                username = "%s %d" % (username, inc)
 
         sxbadges = sxu.get('badgesummary', None)
         badges = {'1':'0','2':'0','3':'0'}
@@ -123,7 +123,7 @@ def userimport(dump, options):
             s = orm.SubscriptionSettings(user=osqau)
             s.save()
 
-            user_by_name[osqau.username] = osqau
+            uidmapper[osqau.id] = osqau.id
         else:
             new_about = sxu.get('aboutme', None)
             if new_about and osqau.about != new_about:
@@ -142,6 +142,7 @@ def userimport(dump, options):
             merged_users.append(osqau.id)
             osqau.save()
 
+        user_by_name[osqau.username] = osqau
 
         openid = sxu.get('openid', None)
         if openid and openidre.match(openid):
@@ -259,7 +260,7 @@ def comment_import(dump, uidmap, posts):
             id = currid,
             node_type = "comment",
             added_at = readTime(sxc['creationdate']),
-            author_id = uidmap[sxc['userid']],
+            author_id = uidmap[sxc.get('userid', 1)],
             body = sxc['text'],
             parent_id = sxc.get('postid'),
             vote_up_count = 0,
@@ -272,7 +273,7 @@ def comment_import(dump, uidmap, posts):
             oc.deleted_by_id = uidmap[sxc['deletionuserid']]
             oc.author_id = uidmap[sxc['deletionuserid']]
         else:
-            oc.author_id = uidmap[sxc['userid']]
+            oc.author_id = uidmap[sxc.get('userid', 1)]
 
 
         posts[oc.id] = oc
