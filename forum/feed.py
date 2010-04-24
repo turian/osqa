@@ -15,7 +15,7 @@ from django.utils.translation import ugettext as _
 from models import Question
 from django.conf import settings
 class RssLastestQuestionsFeed(Feed):
-    title = settings.APP_TITLE + _(' - ')+ _('latest questions')
+    title = str(settings.APP_TITLE) + _(' - ')+ _('latest questions')
     link = settings.APP_URL #+ '/' + _('question/')
     description = settings.APP_DESCRIPTION
     #ttl = 10
