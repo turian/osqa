@@ -40,7 +40,7 @@ class AbstractBadge(object):
         try:
             badge = Badge.objects.get(slug=self.badge)
         except:
-            logging.log('Trying to award a badge not installed in the database.')
+            logging.log(1, 'Trying to award a badge not installed in the database.')
             return
             
         content_type = ContentType.objects.get_for_model(obj.__class__)
