@@ -54,8 +54,15 @@ The introductory page that is visible in the sidebar for anonymous users.
 """),
 widget=Textarea))
 
-APP_COPYRIGHT = Setting('APP_COPYRIGHT', 'Copyright OSQA, 2009. Some rights reserved under creative commons license.', BASIC_SET, dict(
+APP_COPYRIGHT = Setting('APP_COPYRIGHT', 'Copyright OSQA, 2010. Some rights reserved under creative commons license.', BASIC_SET, dict(
 label = _("Copyright notice"),
 help_text = _("""
 The copyright notice visible at the footer of your page.
 """)))
+
+COMMENT_MAX_LENGTH = Setting('COMMENT_MAX_LENGTH', 300, BASIC_SET, dict(
+label = _("Maximum length of comment"),
+help_text = _("""
+The maximum length a user can enter for a comment.
+""")))
+

@@ -4,6 +4,7 @@ from forum.models import Question, FavoriteQuestion
 from django.utils.translation import ugettext as _
 from django.core.urlresolvers import reverse
 from django import template
+from django.conf import settings
 
 register = template.Library()
 
@@ -120,7 +121,7 @@ def comments(post, user):
         'comments': comments,
         'post': post,
         'can_comment': user.can_comment(post),
-        'max_length': 300,
+        'max_length': settings.COMMENT_MAX_LENGTH,
         'showing': showing,
         'total': len(all_comments),
     }

@@ -32,7 +32,7 @@ class Comment(Node):
         try:
             ping_google()
         except Exception:
-            logging.debug('problem pinging google did you register you sitemap with google?')
+            logging.debug('problem pinging google did you register your sitemap with google?')
 
     def mark_deleted(self, user):
         if super(Comment, self).mark_deleted(user):

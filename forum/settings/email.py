@@ -1,5 +1,6 @@
 from base import Setting, SettingSet
 from django.utils.translation import ugettext_lazy as _
+from django.forms.widgets import PasswordInput
 
 EMAIL_SET = SettingSet('email', _('Email Settings'), _("Email server and other email related settings."), 50)
 
@@ -29,7 +30,8 @@ label = _("Email Password"),
 help_text = _("""
 The password for your SMTP connection.
 """),
-required=False))
+required=False,
+widget=PasswordInput))
 
 EMAIL_USE_TLS = Setting('EMAIL_USE_TLS', False, EMAIL_SET, dict(
 label = _("Use TLS"),
