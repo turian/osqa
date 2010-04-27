@@ -346,6 +346,17 @@ def mark_tag(request, tag=None, **kwargs):#tagging system
             ts.update(reason=reason)
     return HttpResponse(simplejson.dumps(''), mimetype="application/json")
 
+def matching_tags(request):
+    if len(request.GET['q']) == 0:
+       raise Exception(_("Invalid request"))
+
+    possible_tags = Tag.objects.filter(name__istartswith = request.GET['q'])
+    tag_output = ''
+    for tag in possible_tags:
+        tag_output += (tag.name + "|" + tag.name + "." + tag.used_count.__str__() + "\n")
+        
+    return HttpResponse(tag_output, mimetype="text/plain")
+
 @ajax_login_required
 def ajax_toggle_ignored_questions(request):#ajax tagging and tag-filtering system
     if request.user.hide_ignored_questions:

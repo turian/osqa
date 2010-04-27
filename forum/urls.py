@@ -68,7 +68,8 @@ urlpatterns += patterns('',
     url(r'^%s(?P<id>\d+)/' % _('flag/'), app.commands.flag_post, name='flag_post'),
     url(r'^%s(?P<id>\d+)/' % _('delete/'), app.commands.delete_post, name='delete_post'),
     url(r'^%s(?P<id>\d+)/$' % _('subscribe/'), app.commands.subscribe, name="subscribe"),
-
+    url(r'^%s' % _('matching_tags/'), app.commands.matching_tags, name='matching_tags'),
+    
     url(r'^%s(?P<id>\d+)/%s$' % (_('questions/'), _('revisions/')), app.readers.revisions, name='question_revisions'),
     url(r'^%s$' % _('command/'), app.commands.ajax_command, name='call_ajax'),
 

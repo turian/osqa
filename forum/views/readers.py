@@ -96,7 +96,7 @@ def question_list(request, initial, list_description=_('questions'), sort=None, 
     return {
         "questions" : questions,
         "questions_count" : questions.count(),
-        "tags_autocomplete" : _get_tags_cache_json(),
+        #"tags_autocomplete" : _get_tags_cache_json(),
         "list_description": list_description,
         "base_path" : base_path,
         }

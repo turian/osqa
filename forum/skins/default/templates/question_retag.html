@@ -9,18 +9,24 @@
         $().ready(function(){
             $("#nav_questions").attr('className',"on");
             //Tags autocomplete action
-            var tags = {{ tags|safe }};
-        	$("#id_tags").autocomplete(tags, {
+        	$("#id_tags").autocomplete("/matching_tags", {
                 minChars: 1,
         		matchContains: true,
                 max: 20,
                 multiple: true,
                 multipleSeparator: " ",
-        		formatItem: function(row, i, max) {
+        		/*formatItem: function(row, i, max) {
         			return row.n + " ("+ row.c +")";
         		},
                 formatResult: function(row, i, max){
                     return row.n;
+                } */
+                formatItem: function(row, i, max, value) {
+                    return row[1].split(".")[0] + " (" + row[1].split(".")[1] + ")";
+                },
+
+                formatResult: function(row, i, max, value){
+                    return row[0];
                 }
                 
             });

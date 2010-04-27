@@ -400,17 +400,19 @@ function pickedTags(){
         init: function(){
             collectPickedTags();
             setupHideIgnoredQuestionsControl();
-            $("#interestingTagInput, #ignoredTagInput").autocomplete(tags, {
+            $("#interestingTagInput, #ignoredTagInput").autocomplete("/matching_tags", {
                 minChars: 1,
                 matchContains: true,
                 max: 20,
-                multiple: true,
-                multipleSeparator: " ",
-                formatItem: function(row, i, max) {
-                    return row.n + " ("+ row.c +")";
+                /*multiple: false, - the favorite tags and ignore tags don't let you do multiple tags
+                multipleSeparator: " "*/
+
+                formatItem: function(row, i, max, value) {
+                    return row[1].split(".")[0] + " (" + row[1].split(".")[1] + ")";
                 },
-                formatResult: function(row, i, max){
-                    return row.n;
+
+                formatResult: function(row, i, max, value){
+                    return row[0];
                 }
 
             });
@@ -421,7 +423,7 @@ function pickedTags(){
 }
 
 $(document).ready( function(){
-    if (window.tags != undefined)
+    //if (window.tags != undefined)
         pickedTags().init();
 });
 
