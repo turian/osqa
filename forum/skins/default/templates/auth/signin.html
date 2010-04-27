@@ -3,6 +3,8 @@
 {% load i18n %}
 {% load extra_tags %}
 
+{% block title %}{% spaceless %}{% trans "Login" %}{% endspaceless %}{% endblock %}
+        
 {% block forejs %}
     <link rel="stylesheet" type="text/css" media="screen" href="{% media "/media/style/auth.css" %}"/>
     {% for provider in all_providers %}
@@ -39,7 +41,7 @@
     {% if request.user.is_anonymous %}
         <div style="width:600px;float:left;margin-bottom:5px;">
             <input type="checkbox" checked="checked" id="validate_email" />
-            {% trans "Take the oppurtunity to validate my email next to the external provider I choose." %}
+            {% trans "Validate my email after I login." %}
         </div>
     {% endif %}
     <div id="bigicon_providers">
