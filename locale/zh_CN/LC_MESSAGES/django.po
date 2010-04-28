@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-04-28 16:01-0400\n"
+"POT-Creation-Date: 2010-04-28 16:53-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -4712,6 +4712,22 @@ msgstr ""
 
 #: forum_modules/sximporter/templates/page.html:20
 msgid "Merge users with same user name and email"
+msgstr ""
+
+#: locale/phrases.py:1
+msgid "Test Phrase 1"
+msgstr ""
+
+#: locale/phrases.py:2
+msgid "Test Phrase 2"
+msgstr ""
+
+#: locale/phrases.py:3
+msgid "Test Phrase 3"
+msgstr ""
+
+#: locale/phrases.py:4
+msgid "Test Phrase n"
 msgstr ""
 
 #, fuzzy
