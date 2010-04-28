@@ -13,7 +13,7 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.load_template_source',
     'forum.modules.module_templates_loader',
     'forum.skins.load_template_source',
-#     'django.template.loaders.eggs.load_template_source',
+#   'django.template.loaders.eggs.load_template_source',
 )
 
 MIDDLEWARE_CLASSES = [
@@ -82,6 +82,12 @@ if DEBUG:
 try:
     import south
     INSTALLED_APPS.append('south')
+except:
+    pass
+
+try:
+    import rosetta
+    INSTALLED_APPS.append('rosetta')
 except:
     pass
 

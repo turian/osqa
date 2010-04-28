@@ -5,14 +5,10 @@ EXT_KEYS_SET = SettingSet('extkeys', _('External Keys'), _("Keys for various ext
 
 GOOGLE_SITEMAP_CODE = Setting('GOOGLE_SITEMAP_CODE', '', EXT_KEYS_SET, dict(
 label = _("Google sitemap code"),
-help_text = """
-This is the code you get when you register your site at <a href="https://www.google.com/webmasters/tools/">Google webmaster central</a>.
-""",
+help_text = _("This is the code you get when you register your site at <a href='https://www.google.com/webmasters/tools/'>Google webmaster central</a>."),
 required=False))
 
 GOOGLE_ANALYTICS_KEY = Setting('GOOGLE_ANALYTICS_KEY', '', EXT_KEYS_SET, dict(
 label = _("Google analytics key"),
-help_text = """
-Your Google analytics key. You can get one at the <a href="http://www.google.com/analytics/">Google analytics official website</a>
-""",
+help_text = _("Your Google analytics key. You can get one at the <a href='http://www.google.com/analytics/'>Google analytics official website</a>"),
 required=False))

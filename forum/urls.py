@@ -1,6 +1,7 @@
 import startup
 
 import os.path
+from django.conf import settings
 from django.conf.urls.defaults import *
 from django.contrib import admin
 from forum import views as app
@@ -138,3 +139,7 @@ urlpatterns += patterns('',
     url(r'^feeds/rss/$', RssLastestQuestionsFeed, name="latest_questions_feed"),
 )
 
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns += patterns('',
+        url(r'^rosetta/', include('rosetta.urls')),
+    )
