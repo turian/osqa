@@ -60,9 +60,8 @@ help_text = _("""
 The copyright notice visible at the footer of your page.
 """)))
 
-COMMENT_MAX_LENGTH = Setting('COMMENT_MAX_LENGTH', 300, BASIC_SET, dict(
+COMMENT_MAX_LENGTH = Setting('COMMENT_MAX_LENGTH', 600, BASIC_SET, dict(
 label = _("Maximum length of comment"),
 help_text = _("""
 The maximum length a user can enter for a comment.
 """)))
-

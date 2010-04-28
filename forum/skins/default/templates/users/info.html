@@ -82,8 +82,10 @@
                 {% if view_user.date_of_birth%}
                 <tr>
 					<!--todo  - redo this with blocktrans -->
-                    <td>{% trans "age" %}</td>
-                    <td>{% get_age view_user.date_of_birth %} {% trans "age unit" %}</td>
+                    {% if view_user.date_of_birth.year != 1900%}
+                        <td>{% trans "age" %}</td>
+                        <td>{% get_age view_user.date_of_birth %} {% trans "age unit" %}</td>
+                    {% endif %}
                 </tr>
                 {% endif %}
                 {% if request.user.is_superuser %}

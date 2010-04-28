@@ -16,6 +16,7 @@ from django.core.urlresolvers import reverse
 from forum.forms import *
 from forum.utils.html import sanitize_html
 from forum.authentication import user_updated
+from datetime import date
 import decorators
 
 import time
@@ -115,7 +116,7 @@ def edit_user(request, id):
             user.website = sanitize_html(form.cleaned_data['website'])
             user.location = sanitize_html(form.cleaned_data['city'])
             user.date_of_birth = sanitize_html(form.cleaned_data['birthday'])
-            if len(user.date_of_birth) == 0:
+            if user.date_of_birth == "None":
                 user.date_of_birth = '1900-01-01'
             user.about = sanitize_html(form.cleaned_data['about'])
 
