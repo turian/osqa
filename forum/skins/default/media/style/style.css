@@ -412,8 +412,8 @@ blockquote {
 	padding: 2px 4px 3px;
 }
 
-.paginator .prev, { margin-right: 0.5em; }
-.paginator .next, { margin-left: 0.5em; }
+.paginator .prev { margin-right: 0.5em; }
+.paginator .next { margin-left: 0.5em; }
 
 .paginator .page a,.paginator .page a:visited,.paginator .curr {
 	background-color: #FFFFFF;
@@ -536,12 +536,12 @@ a.medal:hover {
 	text-decoration: none;
 }
 
-.tabsA a.on,.tabsA a:hover, {
+.tabsA a.on,.tabsA a:hover {
 	background: none repeat scroll 0 0 #FFFFFF;
 	color: #A40000;
 }
 
-.tabsA a:hover, {
+.tabsA a:hover {
 	background: none repeat scroll 0 0 #356FCB;
 	color: #FFFFFF;
 }
@@ -656,7 +656,7 @@ span.form-error {
 	margin-left: 5px;
 }
 
-div.comments-container, { padding: 0; }
+div.comments-container { padding: 0; }
 
 .answer {
 	border-bottom: 1px solid #CCCCCE;
