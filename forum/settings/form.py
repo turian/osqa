@@ -23,6 +23,11 @@ help_text = _("The minimum number of characters a user must enter into the conte
 # label = _("Maximum number of characters for a question."),
 # help_text = _("The maximum number of characters a user can enter into the description field to submit a question.")))
 
+FORM_EMPTEY_QUESTION_BODY = Setting('FORM_EMPTY_QUESTION_BODY', False, FORUM_SET, dict(
+label = _("Empty question content"),
+help_text = _("If a question's content can be empty."),
+required=False))
+
 
 
 """ settings for comments """

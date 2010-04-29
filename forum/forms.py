@@ -38,7 +38,7 @@ class EditorField(forms.CharField):
         self.initial = ''
 
     def clean(self, value):
-        if len(value) < settings.FORM_MIN_QUESTION_BODY:
+        if len(value) < settings.FORM_MIN_QUESTION_BODY and not settings.FORM_EMPTEY_QUESTION_BODY:
             raise forms.ValidationError(_('question content must be must be at least %s characters' % settings.FORM_MIN_QUESTION_BODY))
 
         return value
