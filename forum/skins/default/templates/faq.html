@@ -58,41 +58,42 @@
                 </tr>
                 -->
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>50</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_COMMENT }}</strong></td>
                     <td>{% trans "add comments" %}</td>
                 </tr>
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>100</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_VOTE_DOWN }}</strong></td>
                     <td>{% trans "downvote" %}</td>
-                </tr><tr>
-                    <td style="text-align:right;padding-right:5px"><strong>250</strong></td>
-                    <td>{% trans "open and close own questions" %}</td>
                 </tr>
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>500</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_CLOSE_OWN }}</strong></td>
+                    <td>{% trans "close own questions" %}</td>
+                </tr>
+                <tr>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_REOPEN_OWN }}</strong></td>
+                    <td>{% trans "reopen own questions" %}</td>
+                </tr>
+                <tr>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_RETAG }}</strong></td>
                     <td>{% trans "retag questions" %}</td>
                 </tr>
                 {% if settings.WIKI_ON %}
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>750</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_EDIT_WIKI }}</strong></td>
                     <td>{% trans "edit community wiki questions" %}</td>
                 </tr>
                 {% endif %}
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>2000</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_EDIT_OTHERS }}</strong></td>
                     <td>{% trans "edit any answer" %}</td>
                 </tr>
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>3000</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_CLOSE_OTHERS }}</strong></td>
                     <td>{% trans "open any closed question" %}</td>
                 </tr>
                 <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>5000</strong></td>
+                    <td style="text-align:right;padding-right:5px"><strong>{{ settings.REP_TO_DELETE_COMMENTS }}</strong></td>
                     <td>{% trans "delete any comment" %}</td>
-                </tr>
-                <tr>
-                    <td style="text-align:right;padding-right:5px"><strong>10000</strong></td>
-                    <td>{% trans "delete any questions and answers and perform other moderation tasks" %}</td>
                 </tr>
 
             </table>

@@ -24,6 +24,7 @@ def faq(request):
     data = {
         'gravatar_faq_url': reverse('faq') + '#gravatar',
         'ask_question_url': reverse('ask'),
+        'settings': settings,
     }
     return render_to_response('faq.html', data, context_instance=RequestContext(request))
 
