@@ -23,8 +23,8 @@ class TitleField(forms.CharField):
         self.initial = ''
 
     def clean(self, value):
-        if len(value) < 10:
-            raise forms.ValidationError(_('title must be > 10 characters'))
+        if len(value) < settings.FORM_MIN_QUESTION_TITLE:
+            raise forms.ValidationError(_('title must be must be at least %s characters' % settings.FORM_MIN_QUESTION_TITLE))
 
         return value
 
@@ -38,8 +38,8 @@ class EditorField(forms.CharField):
         self.initial = ''
 
     def clean(self, value):
-        if len(value) < 10:
-            raise forms.ValidationError(_('question content must be > 10 characters'))
+        if len(value) < settings.FORM_MIN_QUESTION_BODY:
+            raise forms.ValidationError(_('question content must be must be at least %s characters' % settings.FORM_MIN_QUESTION_BODY))
 
         return value
 

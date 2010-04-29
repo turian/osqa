@@ -121,7 +121,7 @@ def comments(post, user):
         'comments': comments,
         'post': post,
         'can_comment': user.can_comment(post),
-        'max_length': settings.COMMENT_MAX_LENGTH,
+        'max_length': settings.FORM_MAX_COMMENT_BODY,
         'showing': showing,
         'total': len(all_comments),
     }

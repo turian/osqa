@@ -239,6 +239,9 @@ def comment(request, id):
     if not len(comment_text):
         raise Exception(_("Comment is empty"))
 
+    if not len(comment_text) > settings.FORM_MIN_COMMENT_BODY:
+        raise Exception(_("Comment must be at least %s characters" % settings.FORM_MIN_COMMENT_BODY))
+
     comment.create_revision(user, body=comment_text)
 
     if comment.active_revision.revision == 1:

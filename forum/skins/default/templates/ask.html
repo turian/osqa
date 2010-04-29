@@ -47,7 +47,6 @@
                 }
 
             });
-
         });
         </script>
 {% endblock %}
@@ -84,7 +83,7 @@
 
             <div class="form-item">
                 <div id="wmd-button-bar" class="wmd-panel"></div>
-                {{ form.text }}
+                {{ form.text }} {{ form.text.errors }}
 
                 <div class="preview-toggle">
                     <table width="100%">

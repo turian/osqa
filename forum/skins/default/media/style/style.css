@@ -656,6 +656,13 @@ span.form-error {
 	margin-left: 5px;
 }
 
+ul.errorlist li {
+	color: #990000;
+	font-weight: normal;
+	margin-left: 0px;
+    margin-top: 5px;
+}
+
 div.comments-container { padding: 0; }
 
 .answer {
