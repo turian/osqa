@@ -2,7 +2,7 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from forum.models import User
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, HttpResponseForbidden
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from django.utils.http import urlquote_plus
@@ -313,7 +313,7 @@ def auth_settings(request):
 def remove_external_provider(request, id):
     association = get_object_or_404(AuthKeyUserAssociation, id=id)
     if not association.user == request.user:
-        raise Http404()
+        raise HttpResponseForbidden()
     request.user.message_set.create(message=_("You removed the association with %s") % association.provider)
     association.delete()
     return HttpResponseRedirect(reverse('user_authsettings'))
