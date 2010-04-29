@@ -312,6 +312,8 @@ def auth_settings(request):
 
 def remove_external_provider(request, id):
     association = get_object_or_404(AuthKeyUserAssociation, id=id)
+    if not association.user == request.user:
+        raise Http404()
     request.user.message_set.create(message=_("You removed the association with %s") % association.provider)
     association.delete()
     return HttpResponseRedirect(reverse('user_authsettings'))
