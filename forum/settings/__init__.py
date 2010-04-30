@@ -15,7 +15,8 @@ from minrep import *
 from repgain import *
 from voting import *
 from upload import *
-from pages import *
+from about import *
+from faq import *
 from form import *
 
 BADGES_SET = SettingSet('badges', _('Badges config'), _("Configure badges on your OSQA site."), 500)

@@ -2,11 +2,12 @@ import django.dispatch
 from django.utils.encoding import force_unicode
 
 class SettingSet(list):
-    def __init__(self, name, title, description, weight=1000):
+    def __init__(self, name, title, description, weight=1000, markdown=False):
         self.name = name
         self.title = title
         self.description = description
         self.weight = weight
+        self.markdown = markdown
 
 class BaseSetting(object):
     def __init__(self, name, default, field_context):

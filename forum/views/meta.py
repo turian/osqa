@@ -21,12 +21,7 @@ def about(request):
     return render_to_response('about.html', {'text': settings.ABOUT_PAGE_TEXT.value }, context_instance=RequestContext(request))
 
 def faq(request):
-    data = {
-        'gravatar_faq_url': reverse('faq') + '#gravatar',
-        'ask_question_url': reverse('ask'),
-        'settings': settings,
-    }
-    return render_to_response('faq.html', data, context_instance=RequestContext(request))
+    return render_to_response('faq.html', {'text': settings.FAQ_PAGE_TEXT.value }, context_instance=RequestContext(request))
 
 def feedback(request):
     if request.method == "POST":
@@ -36,6 +31,7 @@ def feedback(request):
 
             if not request.user.is_authenticated:
                 context['email'] = form.cleaned_data.get('email',None)
+            
             context['message'] = form.cleaned_data['message']
             context['name'] = form.cleaned_data.get('name',None)
 

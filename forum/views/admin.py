@@ -53,6 +53,7 @@ def settings_set(request, set_name):
 
     return render_to_response('osqaadmin/set.html', {
         'form': form,
+        'markdown': set.markdown,
         'sets': get_all_sets(),
     }, context_instance=RequestContext(request))
 
