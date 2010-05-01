@@ -115,7 +115,7 @@ class UserEmailField(forms.EmailField):
         if settings.EMAIL_UNIQUE == True:
             try:
                 user = User.objects.get(email = email)
-                raise forms.ValidationError(self.error_messsages['taken'])
+                raise forms.ValidationError(self.error_messages['taken'])
             except User.DoesNotExist:
                 return email
             except User.MultipleObjectsReturned:
