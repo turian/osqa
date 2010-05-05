@@ -4,6 +4,9 @@ from forum.settings.base import BaseSetting
 import forum.settings
 
 class Command(NoArgsCommand):
+    help = 'Dump the settings in the web admin interface'
+#    args = '[--format] [--indent] [appname ...]'
+
     def handle_noargs(self, **options):
         values = {}
         for k in dir(forum.settings):
