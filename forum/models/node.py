@@ -83,13 +83,13 @@ node_edit = django.dispatch.Signal(providing_args=['instance'])
 class Node(BaseModel, NodeContent, DeletableContent):
     __metaclass__ = NodeMetaClass
 
-    node_type            = models.CharField(max_length=16, default='node')
-    parent               = models.ForeignKey('Node', related_name='children', null=True)
-    abs_parent           = models.ForeignKey('Node', related_name='all_children', null=True)
+    node_type             = models.CharField(max_length=16, default='node')
+    parent                = models.ForeignKey('Node', related_name='children', null=True)
+    abs_parent            = models.ForeignKey('Node', related_name='all_children', null=True)
 
-    added_at             = models.DateTimeField(default=datetime.datetime.now)
+    added_at              = models.DateTimeField(default=datetime.datetime.now)
 
-    tags                 = models.ManyToManyField('Tag', related_name='%(class)ss')
+    tags                  = models.ManyToManyField('Tag', related_name='%(class)ss')
 
     score                 = DenormalizedField(default=0)
     vote_up_count         = DenormalizedField(default=0)
@@ -207,8 +207,6 @@ class Node(BaseModel, NodeContent, DeletableContent):
         api = Akismet()
         if api.key is None:
             print "problem" # raise APIKeyError
-        elif not api.verify_key():
-            print "problem" # raise APIKeyError()
         else:
             if api.comment_check(comment, data):
                 return True
