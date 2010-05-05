@@ -1,3 +1,4 @@
+from akismet import *
 from base import *
 from tag import Tag
 
@@ -200,6 +201,20 @@ class Node(BaseModel, NodeContent, DeletableContent):
         tags = self.get_tag_list_if_changed()
         super(Node, self).save(*args, **kwargs)
         if tags is not None: self.tags = tags
+
+    @staticmethod
+    def isSpam(comment, data):
+        api = Akismet()
+        if api.key is None:
+            print "problem" # raise APIKeyError
+        elif not api.verify_key():
+            print "problem" # raise APIKeyError()
+        else:
+            if api.comment_check(comment, data):
+                return True
+            else:
+                return False
+        return data
 
     class Meta:
         app_label = 'forum'

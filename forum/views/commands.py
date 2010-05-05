@@ -41,6 +41,12 @@ class AnonymousNotAllowedException(Exception):
             """ % {'action': action, 'signin_url': reverse('auth_signin')})
         )
 
+class SpamNotAllowedException(Exception):
+    def __init__(self, action = "comment"):
+        super(SpamNotAllowedException, self).__init__(
+            _("""Your %s has been marked as spam.""" % action)
+        )
+
 class NotEnoughLeftException(Exception):
     def __init__(self, action, limit):
         super(NotEnoughLeftException, self).__init__(
@@ -243,6 +249,17 @@ def comment(request, id):
         raise Exception(_("Comment must be at least %s characters" % settings.FORM_MIN_COMMENT_BODY))
 
     comment.create_revision(user, body=comment_text)
+
+    data = {
+        "user_ip":request.META["REMOTE_ADDR"],
+        "user_agent":request.environ['HTTP_USER_AGENT'],
+        "comment_author":request.user.real_name,
+        "comment_author_email":request.user.email,
+        "comment_author_url":request.user.website,
+        "comment":comment_text
+    }
+    if Node.isSpam(comment_text, data):
+        raise SpamNotAllowedException()
 
     if comment.active_revision.revision == 1:
         return {

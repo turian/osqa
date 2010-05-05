@@ -18,6 +18,7 @@ from forum.models import *
 from forum.const import *
 from forum.utils.forms import get_next_url
 from forum.views.readers import _get_tags_cache_json
+from forum.views.commands import SpamNotAllowedException
 
 # used in index page
 INDEX_PAGE_SIZE = 20
@@ -104,6 +105,17 @@ def ask(request):
         form = AskForm(request.POST)
         if form.is_valid():
             if request.user.is_authenticated():
+                data = {
+                    "user_ip":request.META["REMOTE_ADDR"],
+                    "user_agent":request.environ['HTTP_USER_AGENT'],
+                    "comment_author":request.user.real_name,
+                    "comment_author_email":request.user.email,
+                    "comment_author_url":request.user.website,
+                    "comment":request.POST['text']
+                }
+                if Node.isSpam(request.POST['text'], data):
+                    raise SpamNotAllowedException("question")
+
                 return _create_post(request, Question, form)
             else:
                 return HttpResponseRedirect(reverse('auth_action_signin', kwargs={'action': 'newquestion'}))
@@ -245,6 +257,17 @@ def answer(request, id):
         form = AnswerForm(question, request.POST)
         if form.is_valid():
             if request.user.is_authenticated():
+                data = {
+                    "user_ip":request.META["REMOTE_ADDR"],
+                    "user_agent":request.environ['HTTP_USER_AGENT'],
+                    "comment_author":request.user.real_name,
+                    "comment_author_email":request.user.email,
+                    "comment_author_url":request.user.website,
+                    "comment":request.POST['text']
+                }
+                if Node.isSpam(request.POST['text'], data):
+                    raise SpamNotAllowedException("answer")
+
                 return _create_post(request, Answer, form, question)
             else:
                 return HttpResponseRedirect(reverse('auth_action_signin', kwargs={'action': 'newquestion'}))
